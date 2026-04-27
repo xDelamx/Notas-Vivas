@@ -7,7 +7,7 @@ import { playSuccessSound, playAlertSound } from './utils/audio';
 import { StatsDashboard } from './components/StatsDashboard';
 import { 
   CheckCircle2, Circle, Plus, Sparkles, Loader2, X, Check, Clock, Mic, MicOff, 
-  Archive, RotateCcw, Trash2, MessageCircle, Phone, Bell, Settings, User, Edit2, Moon, Sun, LogOut, AlertCircle
+  Archive, RotateCcw, Trash2, MessageCircle, Phone, Bell, Settings, User, Edit2, Moon, Sun, LogOut, AlertCircle, MessageSquare
 } from 'lucide-react';
 import { EditNoteModal } from './components/EditNoteModal';
 import { NoteCard } from './components/NoteCard';
