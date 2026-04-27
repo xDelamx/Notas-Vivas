@@ -1,0 +1,6 @@
+{
+  "name": "Notas Vivas",
+  "description": "Um aplicativo de notas inteligente que extrai tarefas e acompanha você para verificar se foram concluídas.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": []
+}
