@@ -115,6 +115,7 @@ export default function App() {
   const [filterType, setFilterType] = useState('all');
   const [filterUrgency, setFilterUrgency] = useState('all');
   const [sortBy, setSortBy] = useState<'manual' | 'recent' | 'oldest' | 'urgency' | 'deadline'>('manual');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const { settings, updateSettings } = useSettings();
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -413,6 +414,15 @@ export default function App() {
     setEditingNote(null);
   };
 
+  const togglePin = (id: string) => {
+    const note = notes.find(n => n.id === id);
+    if (note) {
+      updateNote(id, { pinned: !note.pinned });
+      showToast(note.pinned ? 'Nota desfixada' : 'Nota fixada no topo', 'info');
+      trackEvent(note.pinned ? 'note_unpinned' : 'note_pinned', { noteId: id });
+    }
+  };
+
   const filteredNotes = React.useMemo(() => {
     let result = [...notes];
 
@@ -450,6 +460,13 @@ export default function App() {
       const urgencyScore = { 'crítica': 4, 'alta': 3, 'média': 2, 'baixa': 1 };
       result.sort((a, b) => (urgencyScore[b.urgency as keyof typeof urgencyScore] || 0) - (urgencyScore[a.urgency as keyof typeof urgencyScore] || 0));
     }
+
+    // Pinned notes always come first
+    result.sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return 0;
+    });
 
     return result;
   }, [notes, activeTab, searchQuery, filterType, filterUrgency, sortBy]);
@@ -893,6 +910,7 @@ export default function App() {
                   filterType={filterType} setFilterType={setFilterType}
                   filterUrgency={filterUrgency} setFilterUrgency={setFilterUrgency}
                   sortBy={sortBy} setSortBy={setSortBy}
+                  viewMode={viewMode} setViewMode={setViewMode}
                 />
               )}
               
@@ -908,10 +926,10 @@ export default function App() {
               )}
 
               <Reorder.Group 
-                axis="y" 
+                axis={viewMode === 'grid' ? "x" : "y"} 
                 values={sortBy === 'manual' ? filteredNotes : filteredNotes} 
                 onReorder={(arr) => sortBy === 'manual' ? handleReorder(arr) : null}
-                className="flex flex-col gap-6"
+                className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 gap-4 items-start" : "flex flex-col gap-6"}
               >
                 <AnimatePresence>
                   {filteredNotes.map((note) => (
@@ -923,6 +941,8 @@ export default function App() {
                         restoreNote={restoreNote}
                         toggleItemCompletion={toggleItemCompletion}
                         onShare={handleShare}
+                        viewMode={viewMode}
+                        onTogglePin={() => togglePin(note.id)}
                       />
                     ))}
                 </AnimatePresence>

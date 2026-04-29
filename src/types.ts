@@ -21,4 +21,5 @@ export interface Note {
   urgency: 'low' | 'medium' | 'high' | 'critical';
   followUpStrategy: 'app' | 'whatsapp' | 'call' | 'notification';
   summary: string;
+  pinned?: boolean;
 }

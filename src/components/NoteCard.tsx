@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, useDragControls, Reorder, AnimatePresence } from 'motion/react';
-import { Edit2, Archive, RotateCcw, CheckCircle2, Circle, GripVertical, Bell, Share2, Settings } from 'lucide-react';
+import { Edit2, Archive, RotateCcw, CheckCircle2, Circle, GripVertical, Bell, Share2, Settings, Pin } from 'lucide-react';
 import { Note } from '../types';
 import { useTranslation } from 'react-i18next';
 
@@ -20,9 +20,11 @@ interface NoteCardProps {
   restoreNote: (id: string) => void;
   toggleItemCompletion: (noteId: string, itemId: string) => void;
   onShare: (note: Note) => void;
+  viewMode?: 'list' | 'grid';
+  onTogglePin?: () => void;
 }
 
-export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiveNote, restoreNote, toggleItemCompletion, onShare }) => {
+export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiveNote, restoreNote, toggleItemCompletion, onShare, viewMode = 'list', onTogglePin }) => {
   const { t } = useTranslation();
   const controls = useDragControls();
   const styles = getCategoryStyles(note.type);
@@ -53,12 +55,21 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
       exit={{ opacity: 0, scale: 0.95 }}
       className={`bg-white rounded-sm shadow-sm border border-gray-100 p-6 md:p-8 transition-colors relative overflow-hidden group ${
         note.status === 'completed' ? 'opacity-90 bg-gray-50' : ''
-      }`}
+      } ${viewMode === 'grid' ? 'max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200' : ''}`}
     >
       <div className={`absolute top-0 left-0 w-full h-1 ${styles.accent}`} />
       
       {/* Absolute positioned action buttons */}
-      <div className="absolute top-4 right-4 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity z-10">
+      <div className={`absolute top-4 right-4 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity z-10 ${viewMode === 'grid' ? 'bg-white/80 backdrop-blur-sm rounded-full p-0.5' : ''}`}>
+        {onTogglePin && (
+          <button
+            onClick={onTogglePin}
+            className={`p-1.5 rounded transition-all ${note.pinned ? 'text-brand-gold bg-brand-gold/10' : 'text-gray-400 hover:text-brand-gold hover:bg-gray-50'}`}
+            title={note.pinned ? "Desfixar" : "Fixar nota"}
+          >
+            <Pin className={`w-4 h-4 ${note.pinned ? 'fill-current' : ''}`} />
+          </button>
+        )}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
@@ -159,14 +170,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
       </div>
 
       {note.items.length > 0 ? (
-        <ul className="space-y-4 mt-6">
+        <ul className={`space-y-4 ${viewMode === 'grid' ? 'mt-4 space-y-2' : 'mt-6'}`}>
           {note.items.map((item) => (
             <li
               key={item.id}
               className="flex items-start gap-4 group cursor-pointer"
               onClick={() => toggleItemCompletion(note.id, item.id)}
             >
-              <button className="mt-1 text-gray-300 group-hover:text-brand-gold transition-colors focus:outline-none">
+              <button className={`mt-1 text-gray-300 group-hover:text-brand-gold transition-colors focus:outline-none ${viewMode === 'grid' ? 'scale-75 origin-top-left' : ''}`}>
                 {item.completed ? (
                   <CheckCircle2 className="w-5 h-5 text-brand-gold" />
                 ) : (
@@ -174,7 +185,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
                 )}
               </button>
               <span
-                className={`text-lg transition-all font-serif ${
+                className={`transition-all font-serif ${viewMode === 'grid' ? 'text-sm' : 'text-lg'} ${
                   item.completed ? 'line-through text-gray-400 italic' : 'text-brand-brown font-medium'
                 }`}
               >
@@ -184,7 +195,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
           ))}
         </ul>
       ) : (
-        <div className="mt-6 text-brand-brown/60 font-serif italic text-lg">
+        <div className={`mt-6 text-brand-brown/60 font-serif italic ${viewMode === 'grid' ? 'text-sm' : 'text-lg'}`}>
           {note.originalText}
         </div>
       )}
