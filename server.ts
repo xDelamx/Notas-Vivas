@@ -104,15 +104,34 @@ async function startServer() {
               followUpStrategy: { type: SchemaType.STRING },
               summary: { type: SchemaType.STRING },
               needsDeadline: { type: SchemaType.BOOLEAN },
+              deadlineTimestamp: { type: SchemaType.NUMBER },
             },
             required: ['type', 'title', 'items', 'checkInSeconds', 'urgency', 'followUpStrategy', 'summary', 'needsDeadline'],
           },
         }
       });
 
-      const prompt = `Analise: "${text}". Data/Hora: ${timeStr || new Date().toLocaleString()}. Idioma: ${language}.
-      Classifique o tipo (Compras, Tarefa, Ideia, Lembrete, Outro). Forneça título inteligente e itens acionáveis.
-      Urgência (low, medium, high, critical). Estratégia (app, notification, whatsapp, call).`;
+      const now = new Date();
+      const prompt = `Você é um assistente inteligente de notas. Analise o texto a seguir e extraia todas as informações relevantes.
+
+Texto da nota: "${text}"
+Data/Hora atual: ${timeStr || now.toLocaleString('pt-BR')}
+Idioma: ${language}
+
+Instruções:
+1. Classifique o TIPO: Compras, Tarefa, Ideia, Lembrete ou Outro.
+2. Crie um TÍTULO curto e inteligente.
+3. Extraia ITENS acionáveis se houver (ex: lista de compras → itens separados).
+4. Determine a URGÊNCIA: low, medium, high ou critical.
+5. Sugira ESTRATÉGIA de acompanhamento: app, notification, whatsapp ou call.
+6. Escreva um RESUMO curto.
+7. PRAZO/HORÁRIO (MUITO IMPORTANTE):
+   - Se o texto mencionar explicitamente um horário, dia ou data (ex: "hoje às 20:00", "amanhã de manhã", "sexta-feira", "às 15h"), você DEVE:
+     a. Calcular o timestamp Unix em MILISSEGUNDOS correspondente a esse momento, usando a data/hora atual como referência.
+     b. Retornar esse valor em "deadlineTimestamp".
+     c. Retornar "needsDeadline": false (pois o prazo já foi extraído do texto).
+   - Se o texto NÃO mencionar nenhum horário ou data específica, retorne "needsDeadline": true e omita ou coloque 0 em "deadlineTimestamp".
+8. Defina checkInSeconds como o número de segundos até o prazo (se houver), ou 1800 se não houver prazo.`;
 
       const response = await model.generateContent(prompt);
       const result = await response.response;
@@ -124,9 +143,10 @@ async function startServer() {
         items: parsed.items || [],
         checkInSeconds: parsed.checkInSeconds || 1800,
         urgency: parsed.urgency || 'low',
-        followUpStrategy: parsed.followUpStrategy || 'app',
+        followUpStrategy: parsed.followUpStrategy || 'notification',
         summary: parsed.summary || 'Processada.',
         needsDeadline: !!parsed.needsDeadline,
+        deadlineTimestamp: parsed.deadlineTimestamp && parsed.deadlineTimestamp > 0 ? parsed.deadlineTimestamp : null,
       });
     } catch (error: any) {
       console.error('Gemini Error:', error.message);

@@ -10,6 +10,7 @@ export interface ParsedNote {
   followUpStrategy: 'app' | 'whatsapp' | 'call' | 'notification';
   summary: string;
   needsDeadline: boolean;
+  deadlineTimestamp?: number | null;
 }
 
 /**
@@ -44,6 +45,7 @@ export async function parseNote(text: string, currentTime: string, language: str
       followUpStrategy: (parsed.followUpStrategy as ParsedNote['followUpStrategy']) || 'app',
       summary: parsed.summary || 'Nota processada.',
       needsDeadline: !!parsed.needsDeadline,
+      deadlineTimestamp: parsed.deadlineTimestamp && parsed.deadlineTimestamp > 0 ? parsed.deadlineTimestamp : null,
     };
   } catch (e) {
     console.error('Erro no parseNote:', e);

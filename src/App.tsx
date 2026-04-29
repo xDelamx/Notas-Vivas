@@ -314,7 +314,17 @@ export default function App() {
         summary: parsed.summary,
       };
 
-      if (parsed.needsDeadline || parsed.urgency === 'high' || parsed.urgency === 'critical') {
+      // Se a IA extraiu um prazo diretamente do texto, aplica automaticamente
+      if (parsed.deadlineTimestamp) {
+        newNote.deadline = parsed.deadlineTimestamp;
+        newNote.deadlineNotification = true;
+        // checkIn configurado para 10 minutos antes do prazo (ou checkInSeconds da IA)
+        const tenMinsBefore = parsed.deadlineTimestamp - 10 * 60 * 1000;
+        newNote.checkInTime = tenMinsBefore > Date.now() ? tenMinsBefore : parsed.deadlineTimestamp;
+      }
+
+      // Só pergunta ao usuário se a IA sinalizou que precisa de prazo E não extraiu um automaticamente
+      if (!parsed.deadlineTimestamp && (parsed.needsDeadline || parsed.urgency === 'high' || parsed.urgency === 'critical')) {
         setPendingDeadlineNote(newNote);
         setIsProcessing(false);
         return;
