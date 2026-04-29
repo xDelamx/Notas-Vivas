@@ -53,9 +53,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className={`bg-white rounded-sm shadow-sm border border-gray-100 p-6 md:p-8 transition-colors relative overflow-hidden group ${
+      className={`bg-white rounded-sm shadow-sm border border-gray-100 p-6 md:p-8 transition-colors relative group ${
         note.status === 'completed' ? 'opacity-90 bg-gray-50' : ''
-      } ${viewMode === 'grid' ? 'max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200' : ''}`}
+      } ${viewMode === 'grid' ? 'max-h-[350px] overflow-y-auto' : ''}`}
     >
       <div className={`absolute top-0 left-0 w-full h-1 ${styles.accent}`} />
       
@@ -132,7 +132,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
         </div>
       </div>
 
-      <div className="pr-20 mb-6">
+      <div className={viewMode === 'grid' ? 'pr-16 mb-4' : 'pr-20 mb-6'}>
         <div className="flex items-center gap-2 mb-2">
           <h3 className={`font-serif text-xl md:text-2xl font-semibold ${note.status === 'completed' ? 'text-gray-400' : 'text-brand-brown'}`}>
             {note.title}

@@ -319,6 +319,63 @@ Instruções:
   }
 
   app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Servidor reconstruído na porta ${PORT}`));
+
+  // ─── Job de Notificações por Prazo ─────────────────────────────────────────
+  // Roda a cada 60 segundos e envia push para notas cujo prazo está chegando
+  setInterval(async () => {
+    try {
+      const now = Date.now();
+      const tenMinutesFromNow = now + 10 * 60 * 1000;
+
+      // Busca notas ativas com deadline no próximo minuto (10min antes) ou exatamente agora
+      const { data: upcomingNotes } = await supabaseAdmin
+        .from('notes')
+        .select('id, title, user_id, deadline, deadline_notified, deadline_notification, urgency')
+        .eq('status', 'active')
+        .eq('deadline_notification', true)
+        .eq('deadline_notified', false)
+        .lte('deadline', tenMinutesFromNow)  // deadline nos próximos 10 min
+        .gt('deadline', now - 60000);         // não já expirado há mais de 1 min
+
+      if (!upcomingNotes || upcomingNotes.length === 0) return;
+
+      for (const note of upcomingNotes) {
+        // Busca a subscription de push do usuário
+        const { data: subData } = await supabaseAdmin
+          .from('push_subscriptions')
+          .select('subscription')
+          .eq('user_id', note.user_id)
+          .single();
+
+        if (!subData?.subscription) continue;
+
+        const minutesLeft = Math.round((note.deadline - now) / 60000);
+        const isOverdue = minutesLeft <= 0;
+        const title = isOverdue ? '⏰ Hora do lembrete!' : `⏰ Lembrete em ${minutesLeft} min`;
+        const body = `"${note.title}"`;
+
+        try {
+          await webpush.sendNotification(
+            subData.subscription,
+            JSON.stringify({ title, body, url: '/' })
+          );
+          console.log(`[PUSH] Notificação enviada para user ${note.user_id}: ${note.title}`);
+        } catch (pushErr: any) {
+          console.error(`[PUSH] Erro ao enviar para user ${note.user_id}:`, pushErr.message);
+        }
+
+        // Marca como notificada se o prazo já passou ou está em menos de 1 minuto
+        if (minutesLeft <= 1) {
+          await supabaseAdmin
+            .from('notes')
+            .update({ deadline_notified: true })
+            .eq('id', note.id);
+        }
+      }
+    } catch (err: any) {
+      console.error('[PUSH JOB] Erro:', err.message);
+    }
+  }, 60 * 1000); // Roda a cada 1 minuto
 }
 
 startServer();
