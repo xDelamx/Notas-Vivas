@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion, useDragControls, Reorder } from 'motion/react';
-import { Edit2, Archive, RotateCcw, CheckCircle2, Circle, GripVertical, Bell, Share2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, useDragControls, Reorder, AnimatePresence } from 'motion/react';
+import { Edit2, Archive, RotateCcw, CheckCircle2, Circle, GripVertical, Bell, Share2, Settings } from 'lucide-react';
 import { Note } from '../types';
 import { useTranslation } from 'react-i18next';
 
@@ -26,6 +26,22 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
   const { t } = useTranslation();
   const controls = useDragControls();
   const styles = getCategoryStyles(note.type);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
 
   return (
     <Reorder.Item
@@ -42,34 +58,56 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
       <div className={`absolute top-0 left-0 w-full h-1 ${styles.accent}`} />
       
       {/* Absolute positioned action buttons */}
-      <div className="absolute top-4 right-4 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity">
-        {note.status === 'active' && (
+      <div className="absolute top-4 right-4 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity z-10">
+        <div className="relative" ref={menuRef}>
           <button
-            onClick={() => setEditingNote(note)}
+            onClick={() => setShowMenu(!showMenu)}
             className="p-1.5 text-gray-400 hover:text-brand-gold hover:bg-gray-50 rounded transition-all"
-            title={t('edit')}
+            title="Configurações"
           >
-            <Edit2 className="w-4 h-4" />
+            <Settings className="w-4 h-4" />
           </button>
-        )}
-        <button
-          onClick={() => note.status === 'active' || note.status === 'completed' ? archiveNote(note.id) : restoreNote(note.id)}
-          className="p-1.5 text-gray-400 hover:text-brand-gold hover:bg-gray-50 rounded transition-all"
-          title={note.status === 'active' || note.status === 'completed' ? t('archive') : t('unarchive')}
-        >
-          {note.status === 'active' || note.status === 'completed' ? (
-            <Archive className="w-4 h-4" />
-          ) : (
-            <RotateCcw className="w-4 h-4" />
-          )}
-        </button>
-        <button
-          onClick={() => onShare(note)}
-          className="p-1.5 text-gray-400 hover:text-brand-gold hover:bg-gray-50 rounded transition-all"
-          title={t('share')}
-        >
-          <Share2 className="w-4 h-4" />
-        </button>
+          
+          <AnimatePresence>
+            {showMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                className="absolute right-0 top-full mt-1 w-36 bg-white rounded-sm shadow-lg border border-gray-100 overflow-hidden z-20"
+              >
+                {note.status === 'active' && (
+                  <button
+                    onClick={() => { setEditingNote(note); setShowMenu(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-gold transition-colors"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" /> {t('edit')}
+                  </button>
+                )}
+                <button
+                  onClick={() => { 
+                    note.status === 'active' || note.status === 'completed' ? archiveNote(note.id) : restoreNote(note.id);
+                    setShowMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-gold transition-colors"
+                >
+                  {note.status === 'active' || note.status === 'completed' ? (
+                    <><Archive className="w-3.5 h-3.5" /> {t('archive')}</>
+                  ) : (
+                    <><RotateCcw className="w-3.5 h-3.5" /> {t('unarchive')}</>
+                  )}
+                </button>
+                <button
+                  onClick={() => { onShare(note); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-gold transition-colors border-t border-gray-50"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> {t('share')}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         <div 
           onPointerDown={(e) => {
             e.preventDefault();
