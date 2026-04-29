@@ -74,14 +74,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
                 initial={{ opacity: 0, scale: 0.95, y: -10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                className="absolute right-0 top-full mt-1 w-36 bg-white rounded-sm shadow-lg border border-gray-100 overflow-hidden z-20"
+                className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 overflow-hidden z-[100] py-1"
               >
                 {note.status === 'active' && (
                   <button
                     onClick={() => { setEditingNote(note); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-gold transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-gold transition-colors"
                   >
-                    <Edit2 className="w-3.5 h-3.5" /> {t('edit')}
+                    <Edit2 className="w-4 h-4" /> {t('edit')}
                   </button>
                 )}
                 <button
@@ -89,19 +89,19 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
                     note.status === 'active' || note.status === 'completed' ? archiveNote(note.id) : restoreNote(note.id);
                     setShowMenu(false);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-gold transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-gold transition-colors"
                 >
                   {note.status === 'active' || note.status === 'completed' ? (
-                    <><Archive className="w-3.5 h-3.5" /> {t('archive')}</>
+                    <><Archive className="w-4 h-4" /> {t('archive')}</>
                   ) : (
-                    <><RotateCcw className="w-3.5 h-3.5" /> {t('unarchive')}</>
+                    <><RotateCcw className="w-4 h-4" /> {t('unarchive')}</>
                   )}
                 </button>
                 <button
                   onClick={() => { onShare(note); setShowMenu(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-bold uppercase tracking-widest text-gray-600 hover:bg-gray-50 hover:text-brand-gold transition-colors border-t border-gray-50"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-gold transition-colors border-t border-gray-50"
                 >
-                  <Share2 className="w-3.5 h-3.5" /> {t('share')}
+                  <Share2 className="w-4 h-4" /> {t('share')}
                 </button>
               </motion.div>
             )}
