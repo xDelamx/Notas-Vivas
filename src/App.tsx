@@ -615,13 +615,6 @@ export default function App() {
         {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
         <div className="absolute top-8 right-4 md:right-6 flex items-center gap-2">
           <button 
-            onClick={() => setIsDark(!isDark)}
-            className="p-2 text-brand-brown/40 hover:text-brand-brown/80 transition-colors"
-            title={isDark ? "Modo Claro" : "Modo Escuro"}
-          >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-          <button 
             onClick={() => setShowSettings(true)}
             className="p-2 text-brand-brown/40 hover:text-brand-brown/80 transition-colors"
           >
@@ -1104,6 +1097,22 @@ export default function App() {
                 </div>
                 
                 <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-sm">
+                    <div>
+                      <label className="text-[10px] tracking-widest text-brand-gold font-mono uppercase font-bold block mb-1">
+                        Aparência
+                      </label>
+                      <p className="text-xs text-brand-brown/60">Alternar entre modo claro e escuro</p>
+                    </div>
+                    <button 
+                      onClick={() => setIsDark(!isDark)}
+                      className="p-3 bg-white rounded-sm shadow-sm text-brand-brown/60 hover:text-brand-brown transition-colors"
+                      title={isDark ? "Modo Claro" : "Modo Escuro"}
+                    >
+                      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    </button>
+                  </div>
+
                   <div>
                     <label className="text-[10px] tracking-widest text-brand-gold font-mono uppercase font-bold block mb-2">
                       Seu WhatsApp para Alertas
