@@ -60,7 +60,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
       <div className={`absolute top-0 left-0 w-full h-1 ${styles.accent}`} />
       
       {/* Action buttons — appear on hover, compact. Always visible if pinned. */}
-      <div className={`absolute top-3 right-3 flex items-center gap-0.5 transition-opacity duration-150 z-10 ${note.pinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+      <div className={`absolute top-0 right-0 flex items-center transition-opacity duration-150 z-10 ${note.pinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         {onTogglePin && (
           <button
             onClick={onTogglePin}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, SortDesc, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Filter, SortDesc, ChevronDown, ChevronUp, LayoutGrid, List } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -12,13 +12,16 @@ interface FiltersProps {
   setFilterUrgency: (val: string) => void;
   sortBy: 'manual' | 'recent' | 'oldest' | 'urgency' | 'deadline';
   setSortBy: (val: 'manual' | 'recent' | 'oldest' | 'urgency' | 'deadline') => void;
+  viewMode: 'list' | 'grid';
+  setViewMode: (val: 'list' | 'grid') => void;
 }
 
 export function Filters({
   searchQuery, setSearchQuery,
   filterType, setFilterType,
   filterUrgency, setFilterUrgency,
-  sortBy, setSortBy
+  sortBy, setSortBy,
+  viewMode, setViewMode
 }: FiltersProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -40,7 +43,18 @@ export function Filters({
             <span className="w-2 h-2 rounded-full bg-brand-gold ml-2" title="Filtros ativos"></span>
           )}
         </div>
-        {isExpanded ? <ChevronUp className="w-4 h-4 text-brand-brown/40" /> : <ChevronDown className="w-4 h-4 text-brand-brown/40" />}
+        <div className="flex items-center gap-2">
+          {/* View toggle sempre visível no header */}
+          <div className="flex items-center bg-gray-50 border border-gray-100 rounded overflow-hidden">
+            <button onClick={() => setViewMode('list')} className={`p-1 transition-colors ${viewMode === 'list' ? 'bg-brand-gold text-white' : 'text-brand-brown/40 hover:text-brand-brown'}`} title="Lista">
+              <List className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => setViewMode('grid')} className={`p-1 transition-colors ${viewMode === 'grid' ? 'bg-brand-gold text-white' : 'text-brand-brown/40 hover:text-brand-brown'}`} title="Grade">
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          {isExpanded ? <ChevronUp className="w-4 h-4 text-brand-brown/40" /> : <ChevronDown className="w-4 h-4 text-brand-brown/40" />}
+        </div>
       </button>
 
       <AnimatePresence>
