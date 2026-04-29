@@ -1,6 +1,7 @@
-import React from 'react';
-import { Search, Filter, SortDesc } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Filter, SortDesc, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface FiltersProps {
   searchQuery: string;
@@ -20,9 +21,38 @@ export function Filters({
   sortBy, setSortBy
 }: FiltersProps) {
   const { t } = useTranslation();
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const hasActiveFilters = searchQuery !== '' || filterType !== 'all' || filterUrgency !== 'all' || sortBy !== 'manual';
+
   return (
-    <div className="bg-white rounded-sm shadow-sm border border-gray-100 p-4 flex flex-col md:flex-row gap-4 items-center">
-      {/* Search */}
+    <div className="bg-white rounded-sm shadow-sm border border-gray-100 overflow-hidden">
+      <button 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-2 text-brand-brown">
+          <Filter className="w-4 h-4" />
+          <span className="text-[10px] font-bold uppercase tracking-widest">
+            {t('search_and_filters', { defaultValue: 'Buscar e Filtrar' })}
+          </span>
+          {hasActiveFilters && (
+            <span className="w-2 h-2 rounded-full bg-brand-gold ml-2" title="Filtros ativos"></span>
+          )}
+        </div>
+        {isExpanded ? <ChevronUp className="w-4 h-4 text-brand-brown/40" /> : <ChevronDown className="w-4 h-4 text-brand-brown/40" />}
+      </button>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-t border-gray-100"
+          >
+            <div className="p-4 flex flex-col md:flex-row gap-4 items-center">
+              {/* Search */}
       <div className="relative flex-1 w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-brown/40" />
         <input 
@@ -81,7 +111,10 @@ export function Filters({
             <option value="deadline">{t('sort_deadline')}</option>
           </select>
         </div>
-      </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
