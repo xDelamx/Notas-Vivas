@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { parseNote } from './services/geminiService';
+import { authFetch } from './lib/api';
 import { Note, NoteItem } from './types';
 import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { playSuccessSound, playAlertSound } from './utils/audio';

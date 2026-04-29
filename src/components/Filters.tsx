@@ -112,6 +112,7 @@ export function Filters({
           </select>
         </div>
             </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
