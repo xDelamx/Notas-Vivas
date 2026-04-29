@@ -59,24 +59,24 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
     >
       <div className={`absolute top-0 left-0 w-full h-1 ${styles.accent}`} />
       
-      {/* Absolute positioned action buttons */}
-      <div className={`absolute top-4 right-4 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity z-10 ${viewMode === 'grid' ? 'bg-white/80 backdrop-blur-sm rounded-full p-0.5' : ''}`}>
+      {/* Action buttons — appear on hover, compact. Always visible if pinned. */}
+      <div className={`absolute top-3 right-3 flex items-center gap-0.5 transition-opacity duration-150 z-10 ${note.pinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         {onTogglePin && (
           <button
             onClick={onTogglePin}
-            className={`p-1.5 rounded transition-all ${note.pinned ? 'text-brand-gold bg-brand-gold/10' : 'text-gray-400 hover:text-brand-gold hover:bg-gray-50'}`}
-            title={note.pinned ? "Desfixar" : "Fixar nota"}
+            className={`p-1 rounded transition-all ${note.pinned ? 'text-brand-gold' : 'text-gray-300 hover:text-brand-gold hover:bg-gray-50'}`}
+            title={note.pinned ? 'Desfixar' : 'Fixar nota'}
           >
-            <Pin className={`w-4 h-4 ${note.pinned ? 'fill-current' : ''}`} />
+            <Pin className={`w-3.5 h-3.5 ${note.pinned ? 'fill-current' : ''}`} />
           </button>
         )}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 text-gray-400 hover:text-brand-gold hover:bg-gray-50 rounded transition-all"
-            title="Configurações"
+            className="p-1 text-gray-300 hover:text-brand-gold hover:bg-gray-50 rounded transition-all"
+            title="Opções"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-3.5 h-3.5" />
           </button>
           
           <AnimatePresence>
@@ -125,10 +125,10 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
             controls.start(e);
           }}
           style={{ touchAction: 'none' }}
-          className="cursor-grab active:cursor-grabbing p-1.5 text-gray-400 hover:text-brand-gold hover:bg-gray-50 rounded transition-all"
+          className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-brand-gold hover:bg-gray-50 rounded transition-all"
           title="Reordenar (Arraste)"
         >
-          <GripVertical className="w-4 h-4" />
+          <GripVertical className="w-3.5 h-3.5" />
         </div>
       </div>
 

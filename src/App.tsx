@@ -8,7 +8,7 @@ import { playSuccessSound, playAlertSound } from './utils/audio';
 import { StatsDashboard } from './components/StatsDashboard';
 import { 
   CheckCircle2, Circle, Plus, Sparkles, Loader2, X, Check, Clock, Mic, MicOff, 
-  Archive, RotateCcw, Trash2, MessageCircle, Phone, Bell, Settings, User, Edit2, Moon, Sun, LogOut, AlertCircle, MessageSquare
+  Archive, RotateCcw, Trash2, MessageCircle, Phone, Bell, Settings, User, Edit2, Moon, Sun, LogOut, AlertCircle, MessageSquare, LayoutGrid, List
 } from 'lucide-react';
 import { EditNoteModal } from './components/EditNoteModal';
 import { NoteCard } from './components/NoteCard';
@@ -910,8 +910,37 @@ export default function App() {
                   filterType={filterType} setFilterType={setFilterType}
                   filterUrgency={filterUrgency} setFilterUrgency={setFilterUrgency}
                   sortBy={sortBy} setSortBy={setSortBy}
-                  viewMode={viewMode} setViewMode={setViewMode}
                 />
+              )}
+
+              {/* Toolbar: always-visible count + view toggle */}
+              {notes.filter(n => n.status === activeTab).length > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-brand-brown/40">
+                    {filteredNotes.length} {filteredNotes.length === 1 ? 'nota' : 'notas'}
+                  </span>
+                  <div className="flex items-center bg-white border border-gray-100 rounded-sm shadow-sm overflow-hidden">
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`px-2.5 py-1.5 transition-colors flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${
+                        viewMode === 'list' ? 'bg-brand-gold text-white' : 'text-brand-brown/50 hover:text-brand-brown hover:bg-gray-50'
+                      }`}
+                      title="Visualização em Lista"
+                    >
+                      <List className="w-3.5 h-3.5" /> Lista
+                    </button>
+                    <div className="w-px h-4 bg-gray-100" />
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`px-2.5 py-1.5 transition-colors flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${
+                        viewMode === 'grid' ? 'bg-brand-gold text-white' : 'text-brand-brown/50 hover:text-brand-brown hover:bg-gray-50'
+                      }`}
+                      title="Visualização em Grade"
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5" /> Grade
+                    </button>
+                  </div>
+                </div>
               )}
               
               {(activeTab === 'completed' || activeTab === 'archived') && filteredNotes.length > 0 && (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, SortDesc, ChevronDown, ChevronUp, LayoutGrid, List } from 'lucide-react';
+import { Search, Filter, SortDesc, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -12,16 +12,13 @@ interface FiltersProps {
   setFilterUrgency: (val: string) => void;
   sortBy: 'manual' | 'recent' | 'oldest' | 'urgency' | 'deadline';
   setSortBy: (val: 'manual' | 'recent' | 'oldest' | 'urgency' | 'deadline') => void;
-  viewMode: 'list' | 'grid';
-  setViewMode: (val: 'list' | 'grid') => void;
 }
 
 export function Filters({
   searchQuery, setSearchQuery,
   filterType, setFilterType,
   filterUrgency, setFilterUrgency,
-  sortBy, setSortBy,
-  viewMode, setViewMode
+  sortBy, setSortBy
 }: FiltersProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -113,24 +110,6 @@ export function Filters({
             <option value="urgency">{t('sort_urgency')}</option>
             <option value="deadline">{t('sort_deadline')}</option>
           </select>
-        </div>
-        
-        {/* View Toggle */}
-        <div className="flex items-center bg-gray-50 border border-gray-100 rounded-sm overflow-hidden ml-auto">
-          <button 
-            onClick={() => setViewMode('list')}
-            className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-brand-gold text-white' : 'text-brand-brown/40 hover:text-brand-brown hover:bg-gray-100'}`}
-            title="Visualização em Lista"
-          >
-            <List className="w-4 h-4" />
-          </button>
-          <button 
-            onClick={() => setViewMode('grid')}
-            className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-brand-gold text-white' : 'text-brand-brown/40 hover:text-brand-brown hover:bg-gray-100'}`}
-            title="Visualização em Grade"
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
         </div>
 
             </div>
