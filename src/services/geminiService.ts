@@ -17,12 +17,12 @@ export interface ParsedNote {
  * Envia o texto da nota ao servidor, que chama o Gemini internamente.
  * Nunca expõe a chave de API no cliente.
  */
-export async function parseNote(text: string, currentTime: string, language: string = 'pt-BR'): Promise<ParsedNote> {
+export async function parseNote(text: string, nowTimestamp: number, language: string = 'pt-BR'): Promise<ParsedNote> {
   try {
     const response = await authFetch('/api/parse-note', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, timeStr: currentTime, language }),
+      body: JSON.stringify({ text, nowTimestamp, language }),
     });
 
     if (!response.ok) {

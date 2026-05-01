@@ -78,12 +78,12 @@ async function startServer() {
 
   // PARSE NOTE
   app.post('/api/parse-note', requireAuth, aiLimiter, async (req, res) => {
-    const { text, timeStr, language = 'pt-BR' } = req.body;
+    const { text, nowTimestamp, language = 'pt-BR' } = req.body;
     if (!text) return res.status(400).json({ error: 'Texto necessário' });
 
     try {
       const model = ai.getGenerativeModel({ 
-        model: 'gemini-flash-latest',
+        model: 'gemini-1.5-flash',
         generationConfig: {
           responseMimeType: 'application/json',
           responseSchema: {
@@ -99,37 +99,29 @@ async function startServer() {
                   required: ['text'],
                 },
               },
-              checkInSeconds: { type: SchemaType.NUMBER },
               urgency: { type: SchemaType.STRING },
               followUpStrategy: { type: SchemaType.STRING },
               summary: { type: SchemaType.STRING },
-              needsDeadline: { type: SchemaType.BOOLEAN },
               deadlineTimestamp: { type: SchemaType.NUMBER },
             },
-            required: ['type', 'title', 'items', 'checkInSeconds', 'urgency', 'followUpStrategy', 'summary', 'needsDeadline'],
+            required: ['type', 'title', 'items', 'urgency', 'followUpStrategy', 'summary'],
           },
         }
       });
 
-      const now = new Date();
-      const prompt = `Você é um assistente inteligente de notas. Analise o texto a seguir e extraia todas as informações relevantes.
+      const prompt = `Você é um assistente de notas. Analise o texto: "${text}"
+      
+      REFERÊNCIA DE TEMPO ATUAL (Unix Timestamp em ms): ${nowTimestamp || Date.now()}
+      Data/Hora legível equivalente: ${new Date(nowTimestamp || Date.now()).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+      Idioma: ${language}
 
-Texto da nota: "${text}"
-Data/Hora atual de referência (USE ESTA): ${timeStr || now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
-Idioma: ${language}
-
-Instruções:
-1. Classifique o TIPO: Compras, Tarefa, Ideia, Lembrete ou Outro.
-2. Crie um TÍTULO curto e inteligente.
-3. Extraia ITENS acionáveis se houver.
-4. Determine a URGÊNCIA: low, medium, high ou critical.
-5. Sugira ESTRATÉGIA de acompanhamento: app, notification, whatsapp ou call.
-6. Escreva um RESUMO curto.
-7. PRAZO/HORÁRIO (CRÍTICO):
-   - A "Data/Hora atual de referência" acima é o momento exato em que o usuário está falando.
-   - Se o usuário disser "daqui a 20 minutos", "amanhã", ou um horário como "às 14:10", calcule o timestamp Unix (MILISSEGUNDOS) absoluto baseado EXCLUSIVAMENTE nessa referência.
-   - Retorne esse valor em "deadlineTimestamp".
-   - Importante: O resultado deve ser um timestamp Unix real (ex: 1714574400000).`;
+      INSTRUÇÕES:
+      1. Extraia o TIPO, TÍTULO, ITENS, URGÊNCIA (low/medium/high/critical), ESTRATÉGIA e RESUMO.
+      2. CALCULE O DEADLINE:
+         - Se o usuário mencionar um horário ou tempo (ex: "daqui a 10 min", "às 15:30"), você DEVE calcular o Unix Timestamp (ms) absoluto somando ao tempo de referência.
+         - Exemplo: Se agora é 1000ms e ele pede +1 min, retorne 61000.
+         - Se não houver horário, retorne deadlineTimestamp: 0 ou null.
+      3. Importante: Retorne apenas o JSON.`;
 
       const response = await model.generateContent(prompt);
       const result = await response.response;

@@ -299,8 +299,7 @@ export default function App() {
     setIsProcessing(true);
 
     try {
-      const timeStr = currentTime.toLocaleString('pt-BR');
-      const parsed = await parseNote(text, timeStr, i18n.language || 'pt-BR');
+      const parsed = await parseNote(text, Date.now(), i18n.language || 'pt-BR');
       const newNote: Omit<Note, 'id' | 'createdAt'> = {
         originalText: text,
         title: parsed.title,
