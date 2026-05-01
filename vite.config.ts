@@ -22,11 +22,12 @@ export default defineConfig(({ mode: _mode }) => {
       react(), 
       tailwindcss(),
       VitePWA({
-        strategies: 'injectManifest',
-        srcDir: 'public',
-        filename: 'sw.js',
         registerType: 'autoUpdate',
-        injectRegister: false,
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        workbox: {
+          importScripts: ['/push-sw.js'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        },
         manifest: {
           name: 'Notas Vivas',
           short_name: 'Notas Vivas',
