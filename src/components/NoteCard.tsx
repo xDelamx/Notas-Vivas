@@ -60,24 +60,24 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
     >
       <div className={`absolute top-0 left-0 w-full h-1 ${styles.accent}`} />
       
-      {/* Action buttons — Always visible for better mobile UX */}
-      <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
+      {/* Action buttons — Compact grouping */}
+      <div className="absolute top-1.5 right-1.5 flex items-center gap-0 z-10">
         {onTogglePin && (
           <button
             onClick={onTogglePin}
-            className={`p-1.5 rounded-full transition-all ${note.pinned ? 'text-brand-gold bg-brand-gold/5' : 'text-gray-300 hover:text-brand-gold'}`}
+            className={`p-1 rounded-full transition-all ${note.pinned ? 'text-brand-gold bg-brand-gold/5' : 'text-gray-300 hover:text-brand-gold'}`}
             title={note.pinned ? 'Desfixar' : 'Fixar nota'}
           >
-            <Pin className={`w-4 h-4 ${note.pinned ? 'fill-current' : ''}`} />
+            <Pin className={`w-3.5 h-3.5 ${note.pinned ? 'fill-current' : ''}`} />
           </button>
         )}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className={`p-1.5 rounded-full transition-all ${showMenu ? 'bg-brand-gold text-white shadow-sm' : 'text-gray-400 hover:bg-gray-100'}`}
+            className={`p-1 rounded-full transition-all ${showMenu ? 'bg-brand-gold text-white shadow-sm' : 'text-gray-400 hover:bg-gray-100'}`}
             title="Opções"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-3.5 h-3.5" />
           </button>
           
           <AnimatePresence>
@@ -139,14 +139,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
             controls.start(e);
           }}
           style={{ touchAction: 'none' }}
-          className="cursor-grab active:cursor-grabbing p-1.5 text-gray-300 hover:text-brand-gold hover:bg-gray-50 rounded-full transition-all"
+          className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-brand-gold hover:bg-gray-50 rounded-full transition-all"
           title="Reordenar (Arraste)"
         >
-          <GripVertical className="w-4 h-4" />
+          <GripVertical className="w-3.5 h-3.5" />
         </div>
       </div>
 
-      <div className={viewMode === 'grid' ? 'pr-16 mb-4' : 'pr-20 mb-6'}>
+      <div className={viewMode === 'grid' ? 'pr-12 mb-4' : 'pr-14 mb-6'}>
         <div className="flex items-center gap-2 mb-2">
           <h3 className={`font-serif text-xl md:text-2xl font-semibold ${note.status === 'completed' ? 'text-gray-400' : 'text-brand-brown'}`}>
             {note.title}
