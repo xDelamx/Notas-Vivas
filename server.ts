@@ -123,7 +123,7 @@ async function startServer() {
             },
             required: ["type", "title", "items", "urgency", "followUpStrategy", "summary", "deadlineTimestamp"]
           }
-        }
+        } as any
       });
 
       const prompt = `Você é o assistente inteligente do app "Notas Vivas". Sua missão é transformar pensamentos, áudios e textos bagunçados em notas estruturadas e acionáveis.
