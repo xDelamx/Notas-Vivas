@@ -88,15 +88,22 @@ async function startServer() {
       REFERÊNCIA (Unix ms): ${nowTimestamp || Date.now()}
       Idioma: ${language}
 
+      INSTRUÇÕES DE CATEGORIA:
+      - "Lembrete": Use para medicamentos, alarmes, horários específicos ou compromissos. (EX: "tomar tal coisa", "às 10h", "não esquecer de...").
+      - "Tarefa": Use para afazeres gerais sem horário fixo.
+      - "Compras": Use para listas de itens.
+      - "Ideia": Use para pensamentos ou insights.
+      - "Outro": Use apenas se não encaixar em nada acima.
+
       Retorne APENAS um JSON plano com estas chaves:
       {
         "type": "Lembrete", "Tarefa", "Compras", "Ideia" ou "Outro",
-        "title": "título curto",
-        "items": [{"text": "item1"}, {"text": "item2"}],
+        "title": "título curto e direto",
+        "items": [{"text": "item extraído"}],
         "urgency": "low", "medium", "high" ou "critical",
         "followUpStrategy": "notification",
-        "summary": "resumo curto",
-        "deadlineTimestamp": 1234567890 (ms ou 0)
+        "summary": "resumo muito curto",
+        "deadlineTimestamp": 1234567890 (ms calculado se houver horário, senão 0)
       }`;
 
       const response = await model.generateContent(prompt);
