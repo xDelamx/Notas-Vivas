@@ -38,5 +38,10 @@
   "onboarding_welcome": "Bienvenido a Notas Vivas",
   "onboarding_desc": "Transforma audios e textos desordenados en planes de acción.",
   "next": "Siguiente",
-  "finish": "Empezar"
+  "finish": "Empezar",
+  "task": "Tarea",
+  "reminder": "Recordatorio",
+  "shopping": "Compras",
+  "idea": "Idea",
+  "other": "Otro"
 }

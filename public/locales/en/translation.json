@@ -38,5 +38,10 @@
   "onboarding_welcome": "Welcome to Notas Vivas",
   "onboarding_desc": "Transform messy audio and texts into clear action plans.",
   "next": "Next",
-  "finish": "Get Started"
+  "finish": "Get Started",
+  "task": "Task",
+  "reminder": "Reminder",
+  "shopping": "Shopping",
+  "idea": "Idea",
+  "other": "Other"
 }

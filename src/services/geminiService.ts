@@ -32,23 +32,8 @@ export async function parseNote(text: string, nowTimestamp: number, language: st
 
     const parsed = await response.json();
 
-    // --- Lógica de Segurança no Frontend (Mão de Ferro) ---
-    let finalType = parsed.type || 'Outro';
-    const textLower = text.toLowerCase();
-    
-    // Se o texto contém gatilhos óbvios, força para Lembrete no seu celular
-    if (textLower.includes('tomar') || 
-        textLower.includes('remédio') || 
-        textLower.includes('remedio') || 
-        textLower.includes(' dose') ||
-        textLower.includes(' h ') ||
-        textLower.includes(':') ||
-        /\d+h/i.test(textLower)) {
-      finalType = 'Lembrete';
-    }
-
     return {
-      type: finalType,
+      type: parsed.type || 'other',
       title: parsed.title || 'Nota sem título',
       items: (parsed.items || []).map((item: { text?: string }) => ({
         id: uuidv4(),

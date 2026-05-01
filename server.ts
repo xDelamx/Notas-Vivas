@@ -82,64 +82,87 @@ async function startServer() {
     if (!text) return res.status(400).json({ error: 'Texto necessário' });
 
     try {
-      const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = ai.getGenerativeModel({ 
+        model: 'gemini-1.5-flash',
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: SchemaType.OBJECT,
+            properties: {
+              type: {
+                type: SchemaType.STRING,
+                description: "Categorização da nota. 'reminder' para algo com horário ou recorrente (como remédios), 'task' para afazeres gerais, 'shopping' para listas de compras, 'idea' para insights, 'other' para o resto.",
+                enum: ["task", "reminder", "shopping", "idea", "other"]
+              },
+              title: { type: SchemaType.STRING, description: "Título curto, direto e profissional." },
+              items: {
+                type: SchemaType.ARRAY,
+                items: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    text: { type: SchemaType.STRING, description: "Texto do item extraído" }
+                  }
+                },
+                description: "Lista de sub-tarefas ou itens extraídos da nota."
+              },
+              urgency: {
+                type: SchemaType.STRING,
+                enum: ["low", "medium", "high", "critical"],
+                description: "Nível de urgência baseado no contexto."
+              },
+              followUpStrategy: {
+                type: SchemaType.STRING,
+                enum: ["notification", "whatsapp", "app"],
+                description: "Melhor forma de alertar o usuário."
+              },
+              summary: { type: SchemaType.STRING, description: "Resumo executivo de 1 frase." },
+              deadlineTimestamp: { 
+                type: SchemaType.NUMBER, 
+                description: "Unix ms timestamp calculado a partir do texto e do nowTimestamp fornecido. 0 se não houver prazo claro." 
+              }
+            },
+            required: ["type", "title", "items", "urgency", "followUpStrategy", "summary", "deadlineTimestamp"]
+          }
+        }
+      });
 
-      const prompt = `Analise a nota: "${text}"
-      REFERÊNCIA (Unix ms): ${nowTimestamp || Date.now()}
-      Idioma: ${language}
+      const prompt = `Você é o assistente inteligente do app "Notas Vivas". Sua missão é transformar pensamentos, áudios e textos bagunçados em notas estruturadas e acionáveis.
 
-      INSTRUÇÕES DE CATEGORIA:
-      - "Lembrete": Use para medicamentos, alarmes, horários específicos ou compromissos. (EX: "tomar tal coisa", "às 10h", "não esquecer de...").
-      - "Tarefa": Use para afazeres gerais sem horário fixo.
-      - "Compras": Use para listas de itens.
-      - "Ideia": Use para pensamentos ou insights.
-      - "Outro": Use apenas se não encaixar em nada acima.
+      CONTEXTO:
+      - O usuário está no idioma: ${language}
+      - Referência Temporal Atual (Unix ms): ${nowTimestamp || Date.now()}
+      - Texto Original: "${text}"
 
-      Retorne APENAS um JSON plano com estas chaves:
-      {
-        "type": "Lembrete", "Tarefa", "Compras", "Ideia" ou "Outro",
-        "title": "título curto e direto",
-        "items": [{"text": "item extraído"}],
-        "urgency": "low", "medium", "high" ou "critical",
-        "followUpStrategy": "notification",
-        "summary": "resumo muito curto",
-        "deadlineTimestamp": 1234567890 (ms calculado se houver horário, senão 0)
-      }`;
+      DIRETRIZES DE CATEGORIA:
+      - "reminder": Use para compromissos com hora marcada, medicamentos (EX: "tomar X às 10h"), alarmes ou coisas que expiram.
+      - "task": Use para ações que precisam ser feitas, mas não têm um horário rígido de "agora ou nunca".
+      - "shopping": Use se o texto parecer uma lista de compras ou itens para adquirir.
+      - "idea": Use para pensamentos, insights, rascunhos de projetos ou reflexões.
+      - "other": Use apenas se for impossível classificar.
+
+      DIRETRIZES DE URGÊNCIA:
+      - "critical": Saúde (remédios vitais), prazos que vencem em menos de 1 hora.
+      - "high": Trabalho importante, compromissos no mesmo dia.
+      - "medium": Tarefas para a semana.
+      - "low": Ideias ou tarefas sem pressa.
+
+      Extraia o máximo de detalhes possível, convertendo horários relativos (ex: "daqui a 2 horas", "amanhã cedo") em timestamps Unix precisos baseados na referência fornecida.`;
 
       const response = await model.generateContent(prompt);
       const result = await response.response;
       const responseText = result.text();
       
-      console.log(`[AI RAW RESPONSE]: ${responseText}`);
+      const parsed = JSON.parse(responseText);
 
-      // Limpa possíveis marcações de markdown da IA
-      const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(jsonStr);
-
-      // --- Lógica de Força Bruta para Categorização ---
-      let finalType = parsed.type || 'Outro';
-      const textLower = text.toLowerCase();
-      
-      // Se o texto contém palavras de lembrete/medicamento, força a categoria
-      if (textLower.includes('tomar') || 
-          textLower.includes('remédio') || 
-          textLower.includes('remedio') || 
-          textLower.includes(' dose') ||
-          textLower.includes(' h ') ||
-          textLower.includes(':') ||
-          /\d+h/i.test(textLower)) {
-        finalType = 'Lembrete';
-      }
-
-      console.log(`[AI PARSE] Título: "${parsed.title}" | Categoria: ${finalType} | Deadline: ${parsed.deadlineTimestamp ? new Date(parsed.deadlineTimestamp).toLocaleString('pt-BR') : 'N/A'}`);
+      console.log(`[AI PARSE] Título: "${parsed.title}" | Categoria: ${parsed.type} | Deadline: ${parsed.deadlineTimestamp ? new Date(parsed.deadlineTimestamp).toLocaleString('pt-BR') : 'N/A'}`);
 
       res.json({
-        type: finalType,
+        type: parsed.type,
         title: parsed.title || 'Nota',
         items: parsed.items || [],
-        checkInSeconds: parsed.checkInSeconds || 1800,
+        checkInSeconds: 1800, // Padrão
         urgency: parsed.urgency || 'low',
-        followUpStrategy: 'notification',
+        followUpStrategy: parsed.followUpStrategy || 'notification',
         summary: parsed.summary || 'Processada.',
         needsDeadline: !!(parsed.deadlineTimestamp && parsed.deadlineTimestamp > 0),
         deadlineTimestamp: parsed.deadlineTimestamp && parsed.deadlineTimestamp > 0 ? parsed.deadlineTimestamp : null,

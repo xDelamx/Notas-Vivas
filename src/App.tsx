@@ -487,7 +487,7 @@ export default function App() {
         return a.deadline - b.deadline;
       });
     } else if (sortBy === 'urgency') {
-      const urgencyScore = { 'crítica': 4, 'alta': 3, 'média': 2, 'baixa': 1 };
+      const urgencyScore = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
       result.sort((a, b) => (urgencyScore[b.urgency as keyof typeof urgencyScore] || 0) - (urgencyScore[a.urgency as keyof typeof urgencyScore] || 0));
     }
 
@@ -991,6 +991,7 @@ export default function App() {
                         setEditingNote={setEditingNote}
                         archiveNote={archiveNote}
                         restoreNote={restoreNote}
+                        deleteNote={deleteNote}
                         toggleItemCompletion={toggleItemCompletion}
                         onShare={handleShare}
                         viewMode={viewMode}

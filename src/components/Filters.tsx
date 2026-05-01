@@ -88,10 +88,10 @@ export function Filters({
             className="bg-transparent outline-none text-xs text-brand-brown font-medium cursor-pointer"
           >
             <option value="all">{t('filter_type')}</option>
-            <option value="tarefa">{t('task', { defaultValue: 'Tarefa' })}</option>
-            <option value="lista de compras">{t('shopping_list', { defaultValue: 'Compras' })}</option>
-            <option value="ideia">{t('idea', { defaultValue: 'Ideia' })}</option>
-            <option value="lembrete">{t('reminder', { defaultValue: 'Lembrete' })}</option>
+            <option value="task">{t('task', { defaultValue: 'Tarefa' })}</option>
+            <option value="shopping">{t('shopping', { defaultValue: 'Compras' })}</option>
+            <option value="idea">{t('idea', { defaultValue: 'Ideia' })}</option>
+            <option value="reminder">{t('reminder', { defaultValue: 'Lembrete' })}</option>
           </select>
         </div>
 
@@ -103,10 +103,10 @@ export function Filters({
             className="bg-transparent outline-none text-xs text-brand-brown font-medium cursor-pointer"
           >
             <option value="all">{t('filter_urgency')}</option>
-            <option value="baixa">{t('low')}</option>
-            <option value="média">{t('medium')}</option>
-            <option value="alta">{t('high')}</option>
-            <option value="crítica">{t('critical')}</option>
+            <option value="low">{t('low')}</option>
+            <option value="medium">{t('medium')}</option>
+            <option value="high">{t('high')}</option>
+            <option value="critical">{t('critical')}</option>
           </select>
         </div>
 

@@ -6,10 +6,10 @@ import { useTranslation } from 'react-i18next';
 
 export const getCategoryStyles = (type: string) => {
   const t = type.toLowerCase();
-  if (t.includes('compra')) return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', accent: 'bg-emerald-500' };
-  if (t.includes('tarefa')) return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', accent: 'bg-blue-500' };
-  if (t.includes('ideia')) return { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', accent: 'bg-violet-500' };
-  if (t.includes('lembrete')) return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', accent: 'bg-amber-500' };
+  if (t === 'shopping' || t.includes('compra')) return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', accent: 'bg-emerald-500' };
+  if (t === 'task' || t.includes('tarefa')) return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', accent: 'bg-blue-500' };
+  if (t === 'idea' || t.includes('ideia')) return { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', accent: 'bg-violet-500' };
+  if (t === 'reminder' || t.includes('lembrete')) return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', accent: 'bg-amber-500' };
   return { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200', accent: 'bg-slate-500' };
 };
 
