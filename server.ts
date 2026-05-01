@@ -110,21 +110,38 @@ async function startServer() {
       const result = await response.response;
       const responseText = result.text();
       
+      console.log(`[AI RAW RESPONSE]: ${responseText}`);
+
       // Limpa possíveis marcações de markdown da IA
       const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(jsonStr);
 
-      console.log(`[AI PARSE] Nota: "${parsed.title}" | Deadline: ${parsed.deadlineTimestamp ? new Date(parsed.deadlineTimestamp).toLocaleString('pt-BR') : 'N/A'}`);
+      // --- Lógica de Força Bruta para Categorização ---
+      let finalType = parsed.type || 'Outro';
+      const textLower = text.toLowerCase();
+      
+      // Se o texto contém palavras de lembrete/medicamento, força a categoria
+      if (textLower.includes('tomar') || 
+          textLower.includes('remédio') || 
+          textLower.includes('remedio') || 
+          textLower.includes(' dose') ||
+          textLower.includes(' h ') ||
+          textLower.includes(':') ||
+          /\d+h/i.test(textLower)) {
+        finalType = 'Lembrete';
+      }
+
+      console.log(`[AI PARSE] Título: "${parsed.title}" | Categoria: ${finalType} | Deadline: ${parsed.deadlineTimestamp ? new Date(parsed.deadlineTimestamp).toLocaleString('pt-BR') : 'N/A'}`);
 
       res.json({
-        type: parsed.type || 'Outro',
+        type: finalType,
         title: parsed.title || 'Nota',
         items: parsed.items || [],
         checkInSeconds: parsed.checkInSeconds || 1800,
         urgency: parsed.urgency || 'low',
-        followUpStrategy: parsed.followUpStrategy || 'notification',
+        followUpStrategy: 'notification',
         summary: parsed.summary || 'Processada.',
-        needsDeadline: !!parsed.needsDeadline,
+        needsDeadline: !!(parsed.deadlineTimestamp && parsed.deadlineTimestamp > 0),
         deadlineTimestamp: parsed.deadlineTimestamp && parsed.deadlineTimestamp > 0 ? parsed.deadlineTimestamp : null,
       });
     } catch (error: any) {
