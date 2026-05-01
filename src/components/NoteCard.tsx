@@ -49,7 +49,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
   return (
     <Reorder.Item
       value={note}
-      dragListener={true}
+      dragListener={false}
       dragControls={controls}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -131,6 +131,18 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        <div 
+          onPointerDown={(e) => {
+            e.preventDefault();
+            controls.start(e);
+          }}
+          style={{ touchAction: 'none' }}
+          className="cursor-grab active:cursor-grabbing p-1.5 text-gray-300 hover:text-brand-gold hover:bg-gray-50 rounded-full transition-all"
+          title="Reordenar (Arraste)"
+        >
+          <GripVertical className="w-4 h-4" />
         </div>
       </div>
 
