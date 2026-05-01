@@ -116,12 +116,17 @@ async function startServer() {
       Idioma: ${language}
 
       INSTRUÇÕES:
-      1. Extraia o TIPO, TÍTULO, ITENS, URGÊNCIA (low/medium/high/critical), ESTRATÉGIA e RESUMO.
-      2. CALCULE O DEADLINE:
-         - Se o usuário mencionar um horário ou tempo (ex: "daqui a 10 min", "às 15:30"), você DEVE calcular o Unix Timestamp (ms) absoluto somando ao tempo de referência.
-         - Exemplo: Se agora é 1000ms e ele pede +1 min, retorne 61000.
-         - Se não houver horário, retorne deadlineTimestamp: 0 ou null.
-      3. Importante: Retorne apenas o JSON.`;
+      1. Classifique o TIPO exclusivamente como: Lembrete, Tarefa, Compras, Ideia ou Outro.
+         - Use "Lembrete" para medicamentos, horários e alarmes.
+      2. Crie um TÍTULO curto e extraia ITENS acionáveis.
+      3. Defina a URGÊNCIA (low/medium/high/critical).
+      4. Sugira ESTRATÉGIA (app, notification, whatsapp ou call).
+      5. Escreva um RESUMO curto.
+      6. CALCULE O DEADLINE:
+         - A referência atual (Unix ms) é: ${nowTimestamp || Date.now()}
+         - Se o usuário mencionar um horário ou tempo, some esse tempo à referência.
+         - Retorne em "deadlineTimestamp".
+      7. Retorne apenas o JSON.`;
 
       const response = await model.generateContent(prompt);
       const result = await response.response;
