@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, useDragControls, Reorder, AnimatePresence } from 'motion/react';
-import { Edit2, Archive, RotateCcw, CheckCircle2, Circle, GripVertical, Bell, Share2, Settings, Pin } from 'lucide-react';
+import { Edit2, Archive, RotateCcw, CheckCircle2, Circle, GripVertical, Bell, Share2, Settings, Pin, Trash2 } from 'lucide-react';
 import { Note } from '../types';
 import { useTranslation } from 'react-i18next';
 
@@ -18,13 +18,14 @@ interface NoteCardProps {
   setEditingNote: (note: Note) => void;
   archiveNote: (id: string) => void;
   restoreNote: (id: string) => void;
+  deleteNote: (id: string) => void;
   toggleItemCompletion: (noteId: string, itemId: string) => void;
   onShare: (note: Note) => void;
   viewMode?: 'list' | 'grid';
   onTogglePin?: () => void;
 }
 
-export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiveNote, restoreNote, toggleItemCompletion, onShare, viewMode = 'list', onTogglePin }) => {
+export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiveNote, restoreNote, deleteNote, toggleItemCompletion, onShare, viewMode = 'list', onTogglePin }) => {
   const { t } = useTranslation();
   const controls = useDragControls();
   const styles = getCategoryStyles(note.type);
@@ -59,24 +60,24 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
     >
       <div className={`absolute top-0 left-0 w-full h-1 ${styles.accent}`} />
       
-      {/* Action buttons — appear on hover, compact. Always visible if pinned. */}
-      <div className={`absolute top-0 right-0 flex items-center transition-opacity duration-150 z-10 ${note.pinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+      {/* Action buttons — Always visible for better mobile UX */}
+      <div className="absolute top-2 right-2 flex items-center gap-1 z-10">
         {onTogglePin && (
           <button
             onClick={onTogglePin}
-            className={`p-1 rounded transition-all ${note.pinned ? 'text-brand-gold' : 'text-gray-300 hover:text-brand-gold hover:bg-gray-50'}`}
+            className={`p-1.5 rounded-full transition-all ${note.pinned ? 'text-brand-gold bg-brand-gold/5' : 'text-gray-300 hover:text-brand-gold'}`}
             title={note.pinned ? 'Desfixar' : 'Fixar nota'}
           >
-            <Pin className={`w-3.5 h-3.5 ${note.pinned ? 'fill-current' : ''}`} />
+            <Pin className={`w-4 h-4 ${note.pinned ? 'fill-current' : ''}`} />
           </button>
         )}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1 text-gray-300 hover:text-brand-gold hover:bg-gray-50 rounded transition-all"
+            className={`p-1.5 rounded-full transition-all ${showMenu ? 'bg-brand-gold text-white shadow-sm' : 'text-gray-400 hover:bg-gray-100'}`}
             title="Opções"
           >
-            <Settings className="w-3.5 h-3.5" />
+            <Settings className="w-4 h-4" />
           </button>
           
           <AnimatePresence>
@@ -113,6 +114,17 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-gold transition-colors border-t border-gray-50"
                 >
                   <Share2 className="w-4 h-4" /> {t('share')}
+                </button>
+                <button
+                  onClick={() => { 
+                    if (window.confirm(t('confirm_delete', { defaultValue: 'Tem certeza que deseja excluir esta nota permanentemente?' }))) {
+                      deleteNote(note.id);
+                    }
+                    setShowMenu(false); 
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-colors border-t border-gray-50"
+                >
+                  <Trash2 className="w-4 h-4" /> {t('delete', { defaultValue: 'Excluir' })}
                 </button>
               </motion.div>
             )}
