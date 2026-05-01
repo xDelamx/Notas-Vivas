@@ -577,20 +577,33 @@ export default function App() {
   };
 
   // ── Early Returns Seguros (Após declarar TODOS os Hooks) ──────────────────────
+  const [loadingTooLong, setLoadingTooLong] = React.useState(false);
+  React.useEffect(() => {
+    if (!authLoading) return;
+    const t = setTimeout(() => setLoadingTooLong(true), 5000);
+    return () => clearTimeout(t);
+  }, [authLoading]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center space-y-4"
+          className="text-center space-y-4 px-6"
         >
           <Sparkles className="w-10 h-10 text-brand-gold/40 mx-auto" strokeWidth={1} />
           <p className="text-brand-brown/40 text-sm font-serif italic">Carregando...</p>
+          {loadingTooLong && (
+            <p className="text-brand-brown/30 text-xs max-w-xs">
+              Isso está demorando mais que o esperado. Verifique sua conexão com a internet.
+            </p>
+          )}
         </motion.div>
       </div>
     );
   }
+
 
   if (!user) {
     return <AuthModal isDark={isDark} setIsDark={setIsDark} />;
