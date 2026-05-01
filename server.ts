@@ -115,27 +115,27 @@ async function startServer() {
       const prompt = `Você é um assistente inteligente de notas. Analise o texto a seguir e extraia todas as informações relevantes.
 
 Texto da nota: "${text}"
-Data/Hora atual: ${timeStr || now.toLocaleString('pt-BR')}
+Data/Hora atual de referência (USE ESTA): ${timeStr || now.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
 Idioma: ${language}
 
 Instruções:
 1. Classifique o TIPO: Compras, Tarefa, Ideia, Lembrete ou Outro.
 2. Crie um TÍTULO curto e inteligente.
-3. Extraia ITENS acionáveis se houver (ex: lista de compras → itens separados).
+3. Extraia ITENS acionáveis se houver.
 4. Determine a URGÊNCIA: low, medium, high ou critical.
 5. Sugira ESTRATÉGIA de acompanhamento: app, notification, whatsapp ou call.
 6. Escreva um RESUMO curto.
-7. PRAZO/HORÁRIO (MUITO IMPORTANTE):
-   - Se o texto mencionar explicitamente um horário, dia ou data (ex: "hoje às 20:00", "amanhã de manhã", "sexta-feira", "às 15h"), você DEVE:
-     a. Calcular o timestamp Unix em MILISSEGUNDOS correspondente a esse momento, usando a data/hora atual como referência.
-     b. Retornar esse valor em "deadlineTimestamp".
-     c. Retornar "needsDeadline": false (pois o prazo já foi extraído do texto).
-   - Se o texto NÃO mencionar nenhum horário ou data específica, retorne "needsDeadline": true e omita ou coloque 0 em "deadlineTimestamp".
-8. Defina checkInSeconds como o número de segundos até o prazo (se houver), ou 1800 se não houver prazo.`;
+7. PRAZO/HORÁRIO (CRÍTICO):
+   - A "Data/Hora atual de referência" acima é o momento exato em que o usuário está falando.
+   - Se o usuário disser "daqui a 20 minutos", "amanhã", ou um horário como "às 14:10", calcule o timestamp Unix (MILISSEGUNDOS) absoluto baseado EXCLUSIVAMENTE nessa referência.
+   - Retorne esse valor em "deadlineTimestamp".
+   - Importante: O resultado deve ser um timestamp Unix real (ex: 1714574400000).`;
 
       const response = await model.generateContent(prompt);
       const result = await response.response;
       const parsed = JSON.parse(result.text() || '{}');
+
+      console.log(`[AI PARSE] Nota: "${parsed.title}" | Deadline: ${parsed.deadlineTimestamp ? new Date(parsed.deadlineTimestamp).toLocaleString('pt-BR') : 'N/A'}`);
 
       res.json({
         type: parsed.type || 'Outro',
