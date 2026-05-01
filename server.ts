@@ -81,6 +81,7 @@ async function startServer() {
     const { text, nowTimestamp, language = 'pt-BR' } = req.body;
     if (!text) return res.status(400).json({ error: 'Texto necessário' });
 
+    try {
       const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `Analise a nota: "${text}"
