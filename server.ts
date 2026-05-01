@@ -81,30 +81,30 @@ async function startServer() {
     const { text, nowTimestamp, language = 'pt-BR' } = req.body;
     if (!text) return res.status(400).json({ error: 'Texto necessário' });
 
-    try {
-      const model = ai.getGenerativeModel({ 
-        model: 'gemini-flash-latest',
-        generationConfig: {
-          responseMimeType: 'application/json',
-        }
-      });
+      const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-      const prompt = `Analise o texto: "${text}"
-      REFERÊNCIA ATUAL (Unix ms): ${nowTimestamp || Date.now()}
+      const prompt = `Analise a nota: "${text}"
+      REFERÊNCIA (Unix ms): ${nowTimestamp || Date.now()}
       Idioma: ${language}
 
-      Retorne um JSON com:
-      - type: "Lembrete", "Tarefa", "Compras", "Ideia" ou "Outro" (Use Lembrete para remédios).
-      - title: Título curto.
-      - items: [{ "text": "..." }]
-      - urgency: "low", "medium", "high" ou "critical".
-      - followUpStrategy: "app", "notification", "whatsapp" ou "call".
-      - summary: Resumo curto.
-      - deadlineTimestamp: Unix Timestamp (ms) calculado se houver horário no texto, senão 0.`;
+      Retorne APENAS um JSON plano com estas chaves:
+      {
+        "type": "Lembrete", "Tarefa", "Compras", "Ideia" ou "Outro",
+        "title": "título curto",
+        "items": [{"text": "item1"}, {"text": "item2"}],
+        "urgency": "low", "medium", "high" ou "critical",
+        "followUpStrategy": "notification",
+        "summary": "resumo curto",
+        "deadlineTimestamp": 1234567890 (ms ou 0)
+      }`;
 
       const response = await model.generateContent(prompt);
       const result = await response.response;
-      const parsed = JSON.parse(result.text() || '{}');
+      const responseText = result.text();
+      
+      // Limpa possíveis marcações de markdown da IA
+      const jsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(jsonStr);
 
       console.log(`[AI PARSE] Nota: "${parsed.title}" | Deadline: ${parsed.deadlineTimestamp ? new Date(parsed.deadlineTimestamp).toLocaleString('pt-BR') : 'N/A'}`);
 
