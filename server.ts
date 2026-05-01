@@ -320,62 +320,112 @@ Instruções:
 
   app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Servidor reconstruído na porta ${PORT}`));
 
-  // ─── Job de Notificações por Prazo ─────────────────────────────────────────
-  // Roda a cada 60 segundos e envia push para notas cujo prazo está chegando
+  // ─── Agendador de Push em Memória (tarefa 3.4.5) ───────────────────────────
+  const activeSchedules = new Map<string, NodeJS.Timeout>();
+
+  const schedulePush = async (noteId: string, userId: string, title: string, body: string, triggerAt: number) => {
+    const delay = triggerAt - Date.now();
+    if (delay <= 0) return;
+
+    // Limpa agendamento anterior se houver
+    if (activeSchedules.has(noteId)) {
+      clearTimeout(activeSchedules.get(noteId));
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data: subData } = await supabaseAdmin
+          .from('push_subscriptions')
+          .select('subscription')
+          .eq('user_id', userId)
+          .single();
+
+        if (subData?.subscription) {
+          await webpush.sendNotification(
+            subData.subscription,
+            JSON.stringify({ title, body, url: '/' })
+          );
+          console.log(`[PUSH SCHEDULED] Enviado para user ${userId}: ${title}`);
+        }
+      } catch (err: any) {
+        console.error(`[PUSH SCHEDULED] Erro ao enviar para user ${userId}:`, err.message);
+      } finally {
+        activeSchedules.delete(noteId);
+      }
+    }, delay);
+
+    activeSchedules.set(noteId, timer);
+  };
+
+  app.post('/api/push/schedule', requireAuth, async (req, res) => {
+    const { noteId, title, body, triggerAt } = req.body;
+    if (!noteId || !triggerAt) return res.status(400).json({ error: 'Dados insuficientes' });
+
+    await schedulePush(noteId, req.userId!, title, body, triggerAt);
+    res.json({ success: true });
+  });
+
+  // ─── Job de Notificações em Segundo Plano (Monitoramento) ──────────────────
   setInterval(async () => {
     try {
       const now = Date.now();
       const tenMinutesFromNow = now + 10 * 60 * 1000;
 
-      // Busca notas ativas com deadline no próximo minuto (10min antes) ou exatamente agora
+      // Busca notas ativas que precisam de atenção (Deadline ou Check-in)
       const { data: upcomingNotes } = await supabaseAdmin
         .from('notes')
-        .select('id, title, user_id, deadline, deadline_notified, deadline_notification, urgency')
+        .select('id, title, user_id, deadline, check_in_time, deadline_notified, check_in_prompted, urgency')
         .eq('status', 'active')
-        .eq('deadline_notification', true)
-        .eq('deadline_notified', false)
-        .lte('deadline', tenMinutesFromNow)  // deadline nos próximos 10 min
-        .gt('deadline', now - 60000);         // não já expirado há mais de 1 min
+        .or(`deadline.lte.${tenMinutesFromNow},check_in_time.lte.${tenMinutesFromNow}`);
 
       if (!upcomingNotes || upcomingNotes.length === 0) return;
 
       for (const note of upcomingNotes) {
-        // Busca a subscription de push do usuário
-        const { data: subData } = await supabaseAdmin
-          .from('push_subscriptions')
-          .select('subscription')
-          .eq('user_id', note.user_id)
-          .single();
+        // Lógica de Deadline
+        const needsDeadlinePush = note.deadline && 
+                                 !note.deadline_notified && 
+                                 note.deadline <= tenMinutesFromNow && 
+                                 note.deadline > now - 60000;
 
-        if (!subData?.subscription) continue;
+        // Lógica de Check-in
+        const needsCheckInPush = note.check_in_time && 
+                                !note.check_in_prompted && 
+                                note.check_in_time <= tenMinutesFromNow && 
+                                note.check_in_time > now - 60000;
 
-        const minutesLeft = Math.round((note.deadline - now) / 60000);
-        const isOverdue = minutesLeft <= 0;
-        const title = isOverdue ? '⏰ Hora do lembrete!' : `⏰ Lembrete em ${minutesLeft} min`;
-        const body = `"${note.title}"`;
+        if (needsDeadlinePush || needsCheckInPush) {
+          const { data: subData } = await supabaseAdmin
+            .from('push_subscriptions')
+            .select('subscription')
+            .eq('user_id', note.user_id)
+            .single();
 
-        try {
-          await webpush.sendNotification(
-            subData.subscription,
-            JSON.stringify({ title, body, url: '/' })
-          );
-          console.log(`[PUSH] Notificação enviada para user ${note.user_id}: ${note.title}`);
-        } catch (pushErr: any) {
-          console.error(`[PUSH] Erro ao enviar para user ${note.user_id}:`, pushErr.message);
-        }
+          if (!subData?.subscription) continue;
 
-        // Marca como notificada se o prazo já passou ou está em menos de 1 minuto
-        if (minutesLeft <= 1) {
-          await supabaseAdmin
-            .from('notes')
-            .update({ deadline_notified: true })
-            .eq('id', note.id);
+          const title = needsDeadlinePush ? '⏰ Prazo Vencendo!' : '👋 Hora do Check-in';
+          const body = `Nota: "${note.title}"`;
+
+          try {
+            await webpush.sendNotification(subData.subscription, JSON.stringify({ title, body, url: '/' }));
+            
+            // Marca como notificado no banco
+            if (needsDeadlinePush) {
+              await supabaseAdmin.from('notes').update({ deadline_notified: true }).eq('id', note.id);
+            } else {
+              await supabaseAdmin.from('notes').update({ check_in_prompted: true }).eq('id', note.id);
+            }
+          } catch (pushErr: any) {
+            if (pushErr.statusCode === 410) {
+              // Subscription expirada/removida pelo usuário
+              await supabaseAdmin.from('push_subscriptions').delete().eq('user_id', note.user_id);
+            }
+          }
         }
       }
     } catch (err: any) {
       console.error('[PUSH JOB] Erro:', err.message);
     }
-  }, 60 * 1000); // Roda a cada 1 minuto
+  }, 60 * 1000);
 }
 
 startServer();

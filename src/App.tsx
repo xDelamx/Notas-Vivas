@@ -346,10 +346,31 @@ export default function App() {
         showToast('Notificações no WhatsApp são exclusivas do Plano Pro.', 'warning');
       }
 
-      await addNote(noteToAdd);
+      const createdNote = await addNote(noteToAdd);
       playSuccessSound();
       showToast('Nota salva com sucesso!');
       trackEvent('note_created', { type: noteToAdd.type, urgency: noteToAdd.urgency });
+
+      // Se a nota tem prazo, tenta agendar uma notificação push
+      if (createdNote && createdNote.deadline) {
+        // Se ainda não deu permissão, sugere ativar
+        if (pushPermission !== 'granted') {
+          showToast('Ative as notificações para receber alertas sonoros!', 'info');
+          // Tenta inscrever silenciosamente se possível ou abre o menu
+          subscribeUser().catch(() => setShowUserMenu(true));
+        }
+
+        // Envia comando de agendamento para o servidor (garante precisão)
+        authFetch('/api/push/schedule', {
+          method: 'POST',
+          body: JSON.stringify({
+            noteId: createdNote.id,
+            title: '⏰ Lembrete Notas Vivas',
+            body: createdNote.title,
+            triggerAt: createdNote.deadline
+          })
+        }).catch(console.error);
+      }
 
       if (noteToAdd.followUpStrategy === 'whatsapp') {
         try {

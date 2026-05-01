@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { authFetch } from '../lib/api';
 
 // Função utilitária para converter a chave VAPID public de Base64 para Uint8Array
 function urlBase64ToUint8Array(base64String: string) {
@@ -21,12 +22,27 @@ export function usePushNotifications() {
     typeof Notification !== 'undefined' ? Notification.permission : 'default'
   );
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  // Verifica se já existe uma subscription ativa
+  const checkSubscription = useCallback(async () => {
+    if (!('serviceWorker' in navigator)) return;
+    
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      setIsSubscribed(!!subscription);
+    } catch (e) {
+      console.error('Erro ao verificar subscription:', e);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof Notification !== 'undefined') {
       setPermission(Notification.permission);
+      checkSubscription();
     }
-  }, []);
+  }, [checkSubscription]);
 
   const subscribeUser = async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -44,25 +60,28 @@ export function usePushNotifications() {
         throw new Error('Permissão de notificação negada.');
       }
 
-      // Registrar o SW de notificações explicitamente se necessário (ou usar o do VitePWA)
-      const registration = await navigator.serviceWorker.register('/sw.js');
+      // Garante que o SW está registrado e pronto
+      let registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) {
+        registration = await navigator.serviceWorker.register('/sw.js');
+      }
+      
       await navigator.serviceWorker.ready;
 
       // Pegar a chave pública do .env
       const publicVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      if (!publicVapidKey) {
+        throw new Error('Chave VAPID pública não configurada no cliente.');
+      }
       
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
       });
 
-      // Enviar para o nosso servidor
-      const response = await fetch('/api/push/subscribe', {
+      // Enviar para o nosso servidor usando o helper autenticado authFetch
+      const response = await authFetch('/api/push/subscribe', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('sb-phjdthutjchnvqrvttcp-auth-token') ? JSON.parse(localStorage.getItem('sb-phjdthutjchnvqrvttcp-auth-token') || '{}').access_token : ''}`
-        },
         body: JSON.stringify(subscription)
       });
 
@@ -70,6 +89,7 @@ export function usePushNotifications() {
         throw new Error('Erro ao salvar inscrição no servidor.');
       }
 
+      setIsSubscribed(true);
       return true;
     } catch (error) {
       console.error('Erro ao subscrever:', error);
@@ -82,6 +102,8 @@ export function usePushNotifications() {
   return {
     permission,
     isSubscribing,
-    subscribeUser
+    isSubscribed,
+    subscribeUser,
+    checkSubscription
   };
 }

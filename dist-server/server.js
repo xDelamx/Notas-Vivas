@@ -88,14 +88,33 @@ async function startServer() {
                             followUpStrategy: { type: SchemaType.STRING },
                             summary: { type: SchemaType.STRING },
                             needsDeadline: { type: SchemaType.BOOLEAN },
+                            deadlineTimestamp: { type: SchemaType.NUMBER },
                         },
                         required: ['type', 'title', 'items', 'checkInSeconds', 'urgency', 'followUpStrategy', 'summary', 'needsDeadline'],
                     },
                 }
             });
-            const prompt = `Analise: "${text}". Data/Hora: ${timeStr || new Date().toLocaleString()}. Idioma: ${language}.
-      Classifique o tipo (Compras, Tarefa, Ideia, Lembrete, Outro). Forneça título inteligente e itens acionáveis.
-      Urgência (low, medium, high, critical). Estratégia (app, notification, whatsapp, call).`;
+            const now = new Date();
+            const prompt = `Você é um assistente inteligente de notas. Analise o texto a seguir e extraia todas as informações relevantes.
+
+Texto da nota: "${text}"
+Data/Hora atual: ${timeStr || now.toLocaleString('pt-BR')}
+Idioma: ${language}
+
+Instruções:
+1. Classifique o TIPO: Compras, Tarefa, Ideia, Lembrete ou Outro.
+2. Crie um TÍTULO curto e inteligente.
+3. Extraia ITENS acionáveis se houver (ex: lista de compras → itens separados).
+4. Determine a URGÊNCIA: low, medium, high ou critical.
+5. Sugira ESTRATÉGIA de acompanhamento: app, notification, whatsapp ou call.
+6. Escreva um RESUMO curto.
+7. PRAZO/HORÁRIO (MUITO IMPORTANTE):
+   - Se o texto mencionar explicitamente um horário, dia ou data (ex: "hoje às 20:00", "amanhã de manhã", "sexta-feira", "às 15h"), você DEVE:
+     a. Calcular o timestamp Unix em MILISSEGUNDOS correspondente a esse momento, usando a data/hora atual como referência.
+     b. Retornar esse valor em "deadlineTimestamp".
+     c. Retornar "needsDeadline": false (pois o prazo já foi extraído do texto).
+   - Se o texto NÃO mencionar nenhum horário ou data específica, retorne "needsDeadline": true e omita ou coloque 0 em "deadlineTimestamp".
+8. Defina checkInSeconds como o número de segundos até o prazo (se houver), ou 1800 se não houver prazo.`;
             const response = await model.generateContent(prompt);
             const result = await response.response;
             const parsed = JSON.parse(result.text() || '{}');
@@ -105,9 +124,10 @@ async function startServer() {
                 items: parsed.items || [],
                 checkInSeconds: parsed.checkInSeconds || 1800,
                 urgency: parsed.urgency || 'low',
-                followUpStrategy: parsed.followUpStrategy || 'app',
+                followUpStrategy: parsed.followUpStrategy || 'notification',
                 summary: parsed.summary || 'Processada.',
                 needsDeadline: !!parsed.needsDeadline,
+                deadlineTimestamp: parsed.deadlineTimestamp && parsed.deadlineTimestamp > 0 ? parsed.deadlineTimestamp : null,
             });
         }
         catch (error) {
@@ -266,5 +286,55 @@ async function startServer() {
         app.get('*', (req, res) => res.sendFile(path.join(d, 'index.html')));
     }
     app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Servidor reconstruído na porta ${PORT}`));
+    // ─── Job de Notificações por Prazo ─────────────────────────────────────────
+    // Roda a cada 60 segundos e envia push para notas cujo prazo está chegando
+    setInterval(async () => {
+        try {
+            const now = Date.now();
+            const tenMinutesFromNow = now + 10 * 60 * 1000;
+            // Busca notas ativas com deadline no próximo minuto (10min antes) ou exatamente agora
+            const { data: upcomingNotes } = await supabaseAdmin
+                .from('notes')
+                .select('id, title, user_id, deadline, deadline_notified, deadline_notification, urgency')
+                .eq('status', 'active')
+                .eq('deadline_notification', true)
+                .eq('deadline_notified', false)
+                .lte('deadline', tenMinutesFromNow) // deadline nos próximos 10 min
+                .gt('deadline', now - 60000); // não já expirado há mais de 1 min
+            if (!upcomingNotes || upcomingNotes.length === 0)
+                return;
+            for (const note of upcomingNotes) {
+                // Busca a subscription de push do usuário
+                const { data: subData } = await supabaseAdmin
+                    .from('push_subscriptions')
+                    .select('subscription')
+                    .eq('user_id', note.user_id)
+                    .single();
+                if (!subData?.subscription)
+                    continue;
+                const minutesLeft = Math.round((note.deadline - now) / 60000);
+                const isOverdue = minutesLeft <= 0;
+                const title = isOverdue ? '⏰ Hora do lembrete!' : `⏰ Lembrete em ${minutesLeft} min`;
+                const body = `"${note.title}"`;
+                try {
+                    await webpush.sendNotification(subData.subscription, JSON.stringify({ title, body, url: '/' }));
+                    console.log(`[PUSH] Notificação enviada para user ${note.user_id}: ${note.title}`);
+                }
+                catch (pushErr) {
+                    console.error(`[PUSH] Erro ao enviar para user ${note.user_id}:`, pushErr.message);
+                }
+                // Marca como notificada se o prazo já passou ou está em menos de 1 minuto
+                if (minutesLeft <= 1) {
+                    await supabaseAdmin
+                        .from('notes')
+                        .update({ deadline_notified: true })
+                        .eq('id', note.id);
+                }
+            }
+        }
+        catch (err) {
+            console.error('[PUSH JOB] Erro:', err.message);
+        }
+    }, 60 * 1000); // Roda a cada 1 minuto
 }
 startServer();
