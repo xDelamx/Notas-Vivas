@@ -28,7 +28,7 @@ import { FeedbackModal } from './components/FeedbackModal';
 export default function App() {
   const { t, i18n } = useTranslation();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { permission: pushPermission, isSubscribing, subscribeUser } = usePushNotifications();
+  const { permission: pushPermission, isSubscribing, subscribeUser, isSubscribed } = usePushNotifications();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -722,9 +722,9 @@ export default function App() {
                             showToast(err.message || 'Erro ao ativar notificações', 'error');
                           }
                         }}
-                        disabled={isSubscribing || pushPermission === 'granted'}
+                        disabled={isSubscribing || (pushPermission === 'granted' && isSubscribed)}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-sm transition-all ${
-                          pushPermission === 'granted' 
+                          (pushPermission === 'granted' && isSubscribed)
                             ? 'bg-emerald-50 text-emerald-600 cursor-default' 
                             : 'bg-brand-brown/5 text-brand-brown hover:bg-brand-brown/10'
                         }`}
@@ -732,7 +732,7 @@ export default function App() {
                         <div className="flex items-center gap-2">
                           <Bell className="w-3.5 h-3.5" />
                           <span className="text-[11px] font-bold uppercase tracking-wider">
-                            {pushPermission === 'granted' ? t('push_active') : t('activate_push')}
+                            {(pushPermission === 'granted' && isSubscribed) ? t('push_active') : t('activate_push')}
                           </span>
                         </div>
                         {isSubscribing && <Loader2 className="w-3 h-3 animate-spin" />}
