@@ -83,50 +83,24 @@ async function startServer() {
 
     try {
       const model = ai.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-flash-latest',
         generationConfig: {
           responseMimeType: 'application/json',
-          responseSchema: {
-            type: SchemaType.OBJECT,
-            properties: {
-              type: { type: SchemaType.STRING },
-              title: { type: SchemaType.STRING },
-              items: {
-                type: SchemaType.ARRAY,
-                items: {
-                  type: SchemaType.OBJECT,
-                  properties: { text: { type: SchemaType.STRING } },
-                  required: ['text'],
-                },
-              },
-              urgency: { type: SchemaType.STRING },
-              followUpStrategy: { type: SchemaType.STRING },
-              summary: { type: SchemaType.STRING },
-              deadlineTimestamp: { type: SchemaType.NUMBER },
-            },
-            required: ['type', 'title', 'items', 'urgency', 'followUpStrategy', 'summary'],
-          },
         }
       });
 
-      const prompt = `Você é um assistente de notas. Analise o texto: "${text}"
-      
-      REFERÊNCIA DE TEMPO ATUAL (Unix Timestamp em ms): ${nowTimestamp || Date.now()}
-      Data/Hora legível equivalente: ${new Date(nowTimestamp || Date.now()).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+      const prompt = `Analise o texto: "${text}"
+      REFERÊNCIA ATUAL (Unix ms): ${nowTimestamp || Date.now()}
       Idioma: ${language}
 
-      INSTRUÇÕES:
-      1. Classifique o TIPO exclusivamente como: Lembrete, Tarefa, Compras, Ideia ou Outro.
-         - Use "Lembrete" para medicamentos, horários e alarmes.
-      2. Crie um TÍTULO curto e extraia ITENS acionáveis.
-      3. Defina a URGÊNCIA (low/medium/high/critical).
-      4. Sugira ESTRATÉGIA (app, notification, whatsapp ou call).
-      5. Escreva um RESUMO curto.
-      6. CALCULE O DEADLINE:
-         - A referência atual (Unix ms) é: ${nowTimestamp || Date.now()}
-         - Se o usuário mencionar um horário ou tempo, some esse tempo à referência.
-         - Retorne em "deadlineTimestamp".
-      7. Retorne apenas o JSON.`;
+      Retorne um JSON com:
+      - type: "Lembrete", "Tarefa", "Compras", "Ideia" ou "Outro" (Use Lembrete para remédios).
+      - title: Título curto.
+      - items: [{ "text": "..." }]
+      - urgency: "low", "medium", "high" ou "critical".
+      - followUpStrategy: "app", "notification", "whatsapp" ou "call".
+      - summary: Resumo curto.
+      - deadlineTimestamp: Unix Timestamp (ms) calculado se houver horário no texto, senão 0.`;
 
       const response = await model.generateContent(prompt);
       const result = await response.response;
