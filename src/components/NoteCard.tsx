@@ -49,7 +49,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
   return (
     <Reorder.Item
       value={note}
-      dragListener={false}
+      dragListener={true}
       dragControls={controls}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -90,14 +90,15 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
               >
                 {note.status === 'active' && (
                   <button
-                    onClick={() => { setEditingNote(note); setShowMenu(false); }}
+                    onClick={(e) => { e.stopPropagation(); setEditingNote(note); setShowMenu(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-gold transition-colors"
                   >
                     <Edit2 className="w-4 h-4" /> {t('edit')}
                   </button>
                 )}
                 <button
-                  onClick={() => { 
+                  onClick={(e) => { 
+                    e.stopPropagation();
                     note.status === 'active' || note.status === 'completed' ? archiveNote(note.id) : restoreNote(note.id);
                     setShowMenu(false);
                   }}
@@ -110,13 +111,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
                   )}
                 </button>
                 <button
-                  onClick={() => { onShare(note); setShowMenu(false); }}
+                  onClick={(e) => { e.stopPropagation(); onShare(note); setShowMenu(false); }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-gold transition-colors border-t border-gray-50"
                 >
                   <Share2 className="w-4 h-4" /> {t('share')}
                 </button>
                 <button
-                  onClick={() => { 
+                  onClick={(e) => { 
+                    e.stopPropagation();
                     if (window.confirm(t('confirm_delete', { defaultValue: 'Tem certeza que deseja excluir esta nota permanentemente?' }))) {
                       deleteNote(note.id);
                     }
@@ -129,18 +131,6 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-
-        <div 
-          onPointerDown={(e) => {
-            e.preventDefault();
-            controls.start(e);
-          }}
-          style={{ touchAction: 'none' }}
-          className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-brand-gold hover:bg-gray-50 rounded transition-all"
-          title="Reordenar (Arraste)"
-        >
-          <GripVertical className="w-3.5 h-3.5" />
         </div>
       </div>
 
