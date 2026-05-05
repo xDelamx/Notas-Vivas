@@ -291,7 +291,7 @@ export default function App() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [notes, activeCheckIn]);
+  }, [notes, activeCheckIn, activeAlarm]);
 
   const handleAddNote = async () => {
     // ── Paywall e Limites (Plano Livre) ───────────────────────────────────────
@@ -784,6 +784,25 @@ export default function App() {
                       )}
                     </div>
                   </div>
+                  <button
+                    onClick={() => {
+                      setActiveAlarm({
+                        id: 'test',
+                        title: 'Teste de Alarme',
+                        summary: 'Este é um teste para verificar se o som e a vibração estão funcionando.',
+                        isAlarm: true,
+                        deadline: Date.now(),
+                        urgency: 'critical',
+                        status: 'active',
+                        type: 'reminder'
+                      } as any);
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-brand-brown hover:bg-gray-50 transition-colors border-t border-gray-50"
+                  >
+                    <Bell className="w-3.5 h-3.5" />
+                    Testar Alarme
+                  </button>
                   <button
                     onClick={() => { signOut(); setShowUserMenu(false); }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"

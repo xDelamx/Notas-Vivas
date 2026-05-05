@@ -82,7 +82,12 @@ export const AlarmOverlay: React.FC<AlarmOverlayProps> = ({ note, onDismiss }) =
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-brand-brown p-4 md:p-10 overflow-hidden"
+      onClick={() => {
+        if (audioCtxRef.current?.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
+      }}
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-brand-brown p-4 md:p-10 overflow-hidden cursor-pointer"
     >
       {/* Background Animated Rings */}
       <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
