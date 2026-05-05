@@ -145,7 +145,7 @@ async function startServer() {
       5. TAREFAS: Use "task" para ações gerais que não se encaixam nas regras acima.
 
       ALARMES:
-      - Se o usuário mencionar "alarme", "me acorde", "toque um despertador" ou "me avise sem falta", marque `isAlarm: true` e defina `urgency: "critical"`.
+      - Se o usuário mencionar "alarme", "me acorde", "toque um despertador" ou "me avise sem falta", marque 'isAlarm: true' e defina 'urgency: "critical"'.
 
       EXEMPLOS DE CLASSIFICAÇÃO:
       - "Comprar leite" -> type: "shopping", title: "Comprar Leite"
