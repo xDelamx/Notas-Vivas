@@ -152,6 +152,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
           <h3 className={`font-serif text-xl md:text-2xl font-semibold ${note.status === 'completed' ? 'text-gray-400' : 'text-brand-brown'}`}>
             {note.title}
           </h3>
+          {note.isAlarm && (
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="flex items-center gap-1 text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-red-100"
+            >
+              <Bell className="w-3 h-3 fill-current" />
+              Alarme
+            </motion.div>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2 mt-2">
           {note.status === 'completed' && (

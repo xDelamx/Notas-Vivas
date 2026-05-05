@@ -119,9 +119,13 @@ async function startServer() {
               deadlineTimestamp: { 
                 type: SchemaType.NUMBER, 
                 description: "Unix ms timestamp calculado a partir do texto e do nowTimestamp fornecido. 0 se não houver prazo claro." 
+              },
+              isAlarm: {
+                type: SchemaType.BOOLEAN,
+                description: "Verdadeiro se o usuário explicitamente pediu um 'alarme', 'despertador' ou 'aviso urgente'."
               }
             },
-            required: ["type", "title", "items", "urgency", "followUpStrategy", "summary", "deadlineTimestamp"]
+            required: ["type", "title", "items", "urgency", "followUpStrategy", "summary", "deadlineTimestamp", "isAlarm"]
           }
         } as any
       });
@@ -139,6 +143,9 @@ async function startServer() {
       3. COMPROMISSOS: Coisas com data, hora ou prazo (ex: "reunião amanhã") DEVEM ser "reminder".
       4. IDEIAS & INSIGHTS: Apenas para pensamentos abstratos ou rascunhos que não são ações imediatas.
       5. TAREFAS: Use "task" para ações gerais que não se encaixam nas regras acima.
+
+      ALARMES:
+      - Se o usuário mencionar "alarme", "me acorde", "toque um despertador" ou "me avise sem falta", marque `isAlarm: true` e defina `urgency: "critical"`.
 
       EXEMPLOS DE CLASSIFICAÇÃO:
       - "Comprar leite" -> type: "shopping", title: "Comprar Leite"
@@ -188,6 +195,7 @@ async function startServer() {
         summary: parsed.summary || 'Processada.',
         needsDeadline: !!(parsed.deadlineTimestamp && parsed.deadlineTimestamp > 0),
         deadlineTimestamp: parsed.deadlineTimestamp && parsed.deadlineTimestamp > 0 ? parsed.deadlineTimestamp : null,
+        isAlarm: !!parsed.isAlarm
       });
     } catch (error: any) {
       console.error('Gemini Error:', error.message);

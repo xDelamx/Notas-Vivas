@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { parseNote } from './services/geminiService';
+import * as Sentry from "@sentry/react";
+import { AlarmOverlay } from './components/AlarmOverlay';
 import { authFetch } from './lib/api';
 import { Note, NoteItem } from './types';
 import { motion, AnimatePresence, Reorder } from 'motion/react';
@@ -144,6 +146,7 @@ export default function App() {
   const [deadlineInput, setDeadlineInput] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [activeAlarm, setActiveAlarm] = useState<Note | null>(null);
 
   // [DEV] Estado de notas — remover log de produção (tarefa 1.1.1 concluída)
 
@@ -229,6 +232,15 @@ export default function App() {
     const interval = setInterval(() => {
       const now = Date.now();
       
+      // Handle Alarms (Virtual Alarm)
+      const noteToAlarm = notes.find(
+        (n) => n.isAlarm && n.deadline && now >= n.deadline && n.status === 'active' && !activeAlarm
+      );
+
+      if (noteToAlarm) {
+        setActiveAlarm(noteToAlarm);
+      }
+
       // Handle standard check-in prompts
       const noteToPrompt = notes.find(
         (n) => n.checkInTime && now >= n.checkInTime && !n.checkInPrompted && n.status === 'active'
@@ -1378,6 +1390,21 @@ export default function App() {
         onClose={() => setShowFeedback(false)} 
         showToast={showToast} 
       />
+
+      <AnimatePresence>
+        {activeAlarm && (
+          <AlarmOverlay 
+            note={activeAlarm} 
+            onDismiss={() => {
+              // Quando desliga o alarme, desmarca o flag isAlarm para não tocar de novo
+              // e opcionalmente arquiva ou marca como concluída? 
+              // Por enquanto vamos apenas desmarcar o alarme.
+              updateNote(activeAlarm.id, { isAlarm: false });
+              setActiveAlarm(null);
+            }} 
+          />
+        )}
+      </AnimatePresence>
 
       {showUpgradeModal && (
         <UpgradeModal 

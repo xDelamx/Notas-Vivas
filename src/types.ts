@@ -22,4 +22,5 @@ export interface Note {
   followUpStrategy: 'app' | 'whatsapp' | 'call' | 'notification';
   summary: string;
   pinned?: boolean;
+  isAlarm?: boolean;
 }
