@@ -73,7 +73,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
         )}
         <div className="relative" ref={menuRef}>
           <button
-            onClick={() => setShowMenu(!showMenu)}
+            onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
             className={`p-1 rounded-full transition-all ${showMenu ? 'bg-brand-gold text-white shadow-sm' : 'text-gray-400 hover:bg-gray-100'}`}
             title="Opções"
           >
@@ -119,10 +119,11 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
                 <button
                   onClick={(e) => { 
                     e.stopPropagation();
+                    e.preventDefault();
                     if (window.confirm(t('confirm_delete', { defaultValue: 'Tem certeza que deseja excluir esta nota permanentemente?' }))) {
                       deleteNote(note.id);
+                      setShowMenu(false); 
                     }
-                    setShowMenu(false); 
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-colors border-t border-gray-50"
                 >

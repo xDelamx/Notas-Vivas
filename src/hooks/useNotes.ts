@@ -127,11 +127,13 @@ export function useNotes() {
       const res = await authFetch(`/api/notes/${id}`, {
         method: 'DELETE'
       });
-      if (!res.ok) throw new Error('Falha ao excluir nota');
-    } catch (err) {
-      console.error(err);
-      fetchNotes(); // Reverte
-      throw err;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Falha ao excluir nota');
+      }
+    } catch (err: any) {
+      console.error('[deleteNote ERROR]', err);
+      fetchNotes(); // Reverte a exclusão otimista
     }
   };
 

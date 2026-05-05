@@ -268,7 +268,11 @@ async function startServer() {
   });
 
   app.delete('/api/notes/:id', requireAuth, async (req, res) => {
-    await supabaseAdmin.from('notes').delete().eq('id', req.params.id).eq('user_id', req.userId);
+    const { error } = await supabaseAdmin.from('notes').delete().eq('id', req.params.id).eq('user_id', req.userId);
+    if (error) {
+      console.error('[DELETE ERROR]', error.message);
+      return res.status(500).json({ error: 'Erro ao deletar nota no banco de dados' });
+    }
     res.json({ success: true });
   });
 
