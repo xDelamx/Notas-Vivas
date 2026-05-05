@@ -83,7 +83,7 @@ async function startServer() {
 
     try {
       const model = ai.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-flash-latest',
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -126,7 +126,7 @@ async function startServer() {
         } as any
       });
 
-      const prompt = `Você é o assistente inteligente do app "Notas Vivas". Sua missão é transformar pensamentos, áudios e textos bagunçados em notas estruturadas, profissionais e extremamente RÍGOROSAS.
+      const prompt = `Você é o assistente inteligente do app "Notas Vivas". Sua missão é transformar pensamentos, áudios e textos bagunçados em notas estruturadas, profissionais e extremamente RIGOROSAS.
 
       CONTEXTO:
       - Idioma: ${language}
@@ -159,7 +159,22 @@ async function startServer() {
       const result = await response.response;
       const responseText = result.text();
       
-      const parsed = JSON.parse(responseText);
+      let parsed = JSON.parse(responseText);
+      
+      // ── RIGOR OVERRIDE (Safety Net) ─────────────────────────────────────────
+      const lowerText = text.toLowerCase();
+      const healthKeywords = ['tomar', 'remedio', 'remédio', 'dorflex', 'dipirona', 'paracetamol', 'consulta', 'medico', 'médico', 'exame', 'hospital', 'saude', 'saúde'];
+      const shoppingKeywords = ['comprar', 'lista de compras', 'supermercado', 'mercado', 'preciso de', 'adquirir'];
+
+      if (parsed.type !== 'reminder' && healthKeywords.some(k => lowerText.includes(k))) {
+        console.log(`[RIGOR] Overriding category to 'reminder' for health context.`);
+        parsed.type = 'reminder';
+        if (parsed.urgency === 'low' || parsed.urgency === 'medium') parsed.urgency = 'high';
+      } else if (parsed.type !== 'shopping' && shoppingKeywords.some(k => lowerText.includes(k))) {
+        console.log(`[RIGOR] Overriding category to 'shopping' for purchase intent.`);
+        parsed.type = 'shopping';
+      }
+      // ─────────────────────────────────────────────────────────────────────────
 
       console.log(`[AI PARSE] Título: "${parsed.title}" | Categoria: ${parsed.type} | Deadline: ${parsed.deadlineTimestamp ? new Date(parsed.deadlineTimestamp).toLocaleString('pt-BR') : 'N/A'}`);
 
