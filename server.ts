@@ -91,7 +91,7 @@ async function startServer() {
             properties: {
               type: {
                 type: SchemaType.STRING,
-                description: "Categorização da nota. 'reminder' para algo com horário ou recorrente (como remédios), 'task' para afazeres gerais, 'shopping' para listas de compras, 'idea' para insights, 'other' para o resto.",
+                description: "Categorização RÍGIDA da nota. 'reminder' para SAÚDE, MEDICAMENTOS ou hora marcada. 'task' para afazeres gerais. 'shopping' para compras. 'idea' para insights. 'other' para o resto.",
                 enum: ["task", "reminder", "shopping", "idea", "other"]
               },
               title: { type: SchemaType.STRING, description: "Título curto, direto e profissional." },
@@ -126,19 +126,26 @@ async function startServer() {
         } as any
       });
 
-      const prompt = `Você é o assistente inteligente do app "Notas Vivas". Sua missão é transformar pensamentos, áudios e textos bagunçados em notas estruturadas e acionáveis.
+      const prompt = `Você é o assistente inteligente do app "Notas Vivas". Sua missão é transformar pensamentos, áudios e textos bagunçados em notas estruturadas, profissionais e extremamente RÍGOROSAS.
 
       CONTEXTO:
-      - O usuário está no idioma: ${language}
+      - Idioma: ${language}
       - Referência Temporal Atual (Unix ms): ${nowTimestamp || Date.now()}
       - Texto Original: "${text}"
 
-      DIRETRIZES DE CATEGORIA:
-      - "reminder": Use para compromissos com hora marcada, medicamentos (EX: "tomar X às 10h"), alarmes ou coisas que expiram.
-      - "task": Use para ações que precisam ser feitas, mas não têm um horário rígido de "agora ou nunca".
-      - "shopping": Use se o texto parecer uma lista de compras ou itens para adquirir.
-      - "idea": Use para pensamentos, insights, rascunhos de projetos ou reflexões.
-      - "other": Use apenas se for impossível classificar.
+      REGRAS DE OURO PARA CATEGORIZAÇÃO (RIGOR MÁXIMO):
+      1. SAÚDE & MEDICAMENTOS: Qualquer menção a remédios, doses, consultas ou sintomas DEVE ser "reminder". É proibido usar "task" para saúde.
+      2. COMPRAS: Qualquer item para comprar ou intenção de aquisição DEVE ser "shopping". 
+      3. COMPROMISSOS: Coisas com data, hora ou prazo (ex: "reunião amanhã") DEVEM ser "reminder".
+      4. IDEIAS & INSIGHTS: Apenas para pensamentos abstratos ou rascunhos que não são ações imediatas.
+      5. TAREFAS: Use "task" para ações gerais que não se encaixam nas regras acima.
+
+      EXEMPLOS DE CLASSIFICAÇÃO:
+      - "Comprar leite" -> type: "shopping", title: "Comprar Leite"
+      - "Tomar dipirona" -> type: "reminder", title: "Medicamento: Dipirona", urgency: "high"
+      - "Reunião amanhã 10h" -> type: "reminder", title: "Reunião", urgency: "high"
+      - "Pensando em viajar" -> type: "idea", title: "Ideia: Viagem"
+      - "Lavar o carro" -> type: "task", title: "Lavar o Carro"
 
       DIRETRIZES DE URGÊNCIA:
       - "critical": Saúde (remédios vitais), prazos que vencem em menos de 1 hora.
@@ -146,7 +153,7 @@ async function startServer() {
       - "medium": Tarefas para a semana.
       - "low": Ideias ou tarefas sem pressa.
 
-      Extraia o máximo de detalhes possível, convertendo horários relativos (ex: "daqui a 2 horas", "amanhã cedo") em timestamps Unix precisos baseados na referência fornecida.`;
+      Extraia o máximo de detalhes possível, convertendo horários relativos em timestamps Unix precisos.`;
 
       const response = await model.generateContent(prompt);
       const result = await response.response;
