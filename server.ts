@@ -181,6 +181,13 @@ async function startServer() {
         console.log(`[RIGOR] Overriding category to 'shopping' for purchase intent.`);
         parsed.type = 'shopping';
       }
+
+      const alarmKeywords = ['alarme', 'despertador', 'me acorde', 'me desperte', 'tocar alarme'];
+      if (!parsed.isAlarm && alarmKeywords.some(k => lowerText.includes(k))) {
+        console.log(`[RIGOR] Overriding isAlarm to true.`);
+        parsed.isAlarm = true;
+        parsed.urgency = 'critical';
+      }
       // ─────────────────────────────────────────────────────────────────────────
 
       console.log(`[AI PARSE] Título: "${parsed.title}" | Categoria: ${parsed.type} | Deadline: ${parsed.deadlineTimestamp ? new Date(parsed.deadlineTimestamp).toLocaleString('pt-BR') : 'N/A'}`);

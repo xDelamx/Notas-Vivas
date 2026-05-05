@@ -243,7 +243,7 @@ export default function App() {
 
       // Handle standard check-in prompts
       const noteToPrompt = notes.find(
-        (n) => n.checkInTime && now >= n.checkInTime && !n.checkInPrompted && n.status === 'active'
+        (n) => n.checkInTime && now >= n.checkInTime && !n.checkInPrompted && n.status === 'active' && !n.isAlarm
       );
 
       if (noteToPrompt && !activeCheckIn) {
