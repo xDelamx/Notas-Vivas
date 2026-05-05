@@ -323,6 +323,7 @@ export default function App() {
         urgency: parsed.urgency,
         followUpStrategy: parsed.followUpStrategy,
         summary: parsed.summary,
+        isAlarm: parsed.isAlarm,
       };
 
       // Se a IA extraiu um prazo diretamente do texto, aplica automaticamente
