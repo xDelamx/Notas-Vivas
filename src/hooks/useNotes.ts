@@ -23,6 +23,7 @@ function mapDbToNote(dbNote: any): Note {
     completedAt: dbNote.completed_at ? Number(dbNote.completed_at) : undefined,
     createdAt: new Date(dbNote.created_at).getTime(),
     pinned: dbNote.is_pinned || false,
+    isAlarm: dbNote.is_alarm || false,
   };
 }
 
@@ -44,6 +45,7 @@ function mapNoteToDb(note: Partial<Note>): any {
   if (note.deadlineNotified !== undefined) dbNote.deadline_notified = note.deadlineNotified;
   if (note.completedAt !== undefined) dbNote.completed_at = note.completedAt;
   if (note.pinned !== undefined) dbNote.is_pinned = note.pinned;
+  if (note.isAlarm !== undefined) dbNote.is_alarm = note.isAlarm;
   return dbNote;
 }
 
