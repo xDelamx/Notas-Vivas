@@ -251,11 +251,13 @@ async function startServer() {
 
   app.post('/api/notes', requireAuth, async (req, res) => {
     const { data, error } = await supabaseAdmin.from('notes').insert({ ...req.body, user_id: req.userId }).select().single();
+    if (error) console.error('[POST NOTE ERROR]', error.message);
     res.json(data);
   });
 
   app.patch('/api/notes/:id', requireAuth, async (req, res) => {
     const { data, error } = await supabaseAdmin.from('notes').update({ ...req.body, updated_at: new Date().toISOString() }).eq('id', req.params.id).eq('user_id', req.userId).select().single();
+    if (error) console.error('[PATCH NOTE ERROR]', error.message);
     res.json(data);
   });
 

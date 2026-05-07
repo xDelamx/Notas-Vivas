@@ -111,6 +111,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, setEditingNote, archiv
                   )}
                 </button>
                 <button
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    updateNote(note.id, { isAlarm: !note.isAlarm, urgency: note.isAlarm ? 'medium' : 'critical' }); 
+                    setShowMenu(false); 
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium transition-colors border-t border-gray-50 ${note.isAlarm ? 'text-brand-gold bg-brand-gold/5' : 'text-gray-700 hover:bg-gray-50'}`}
+                >
+                  <Bell className="w-4 h-4" /> {note.isAlarm ? 'Desativar Alarme' : 'Ativar Alarme'}
+                </button>
+                <button
                   onClick={(e) => { e.stopPropagation(); onShare(note); setShowMenu(false); }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-brand-gold transition-colors border-t border-gray-50"
                 >
